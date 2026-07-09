@@ -1,0 +1,235 @@
+{
+  "projects": [
+    {
+      "id": "coastal-change-demo",
+      "name": "FutureScaping Coastal Change Demo",
+      "description": "A client-safe demonstration of repeat survey reporting for one monitored reach, combining aerial imagery, sections, panorama context, weather history, and change workflow preview in one interface.",
+      "site": {
+        "name": "Monitored Estuary Demo Site",
+        "county": "Client Demo",
+        "country": "United Kingdom",
+        "context": "This demo shows how one monitored reach can be reviewed across repeat survey rounds without revealing the live project location."
+      },
+      "programme": {
+        "cadence": "Repeat survey programme",
+        "objectiveShort": "Track change over time",
+        "operationalLesson": "A single monitored reach is enough to demonstrate how the reporting workflow supports interpretation, comparison, and client discussion.",
+        "consolidationGoal": "Keep the interface stable while the survey rounds and supporting outputs update over time."
+      },
+      "surveyAssetModel": {
+        "currentMode": "demo-subset",
+        "currentModeLabel": "Single reach demo",
+        "futureModeLabel": "Multi-area deployment",
+        "note": "This demo keeps one monitored reach only, using the same repeat-survey structure as the full monitoring system."
+      },
+      "surveys": [
+        {
+          "id": "2026-03-22",
+          "label": "Survey Round 1 - 22 and 23 March 2026",
+          "shortDate": "22-23 Mar 2026",
+          "dateFrom": "2026-03-22",
+          "dateTo": "2026-03-23",
+          "status": "Baseline loaded",
+          "readiness": "assets linked",
+          "assetFolder": "2026-03-22",
+          "dataFolder": "2026-03-22",
+          "comparisonBaseline": null,
+          "notes": "Baseline round used as the starting point for later comparison."
+        },
+        {
+          "id": "2026-04-18",
+          "label": "Survey Round 2 - 18 and 19 April 2026",
+          "shortDate": "18-19 Apr 2026",
+          "dateFrom": "2026-04-18",
+          "dateTo": "2026-04-19",
+          "status": "Repeat survey loaded",
+          "readiness": "assets linked",
+          "assetFolder": "2026-04-18",
+          "dataFolder": "2026-04-18",
+          "comparisonBaseline": "2026-03-22",
+          "notes": "First repeat round for visual and section comparison."
+        },
+        {
+          "id": "2026-06-16",
+          "label": "Survey Round 3 - 16 and 17 June 2026",
+          "shortDate": "16-17 Jun 2026",
+          "dateFrom": "2026-06-16",
+          "dateTo": "2026-06-17",
+          "status": "Latest round loaded",
+          "readiness": "assets linked",
+          "assetFolder": "2026-06-16",
+          "dataFolder": "2026-06-16",
+          "comparisonBaseline": "2026-04-18",
+          "notes": "Latest repeat round for longer-range comparison."
+        }
+      ],
+      "surveyAreaOverrides": {
+        "2026-04-18": {
+          "area8": {
+            "statusLabel": "Early falling tide",
+            "statusTone": "amber",
+            "start": "10:15",
+            "finish": "11:15",
+            "lowTide": "12:56",
+            "lowTideHeight": "-0.15 m",
+            "launchOffset": "161 mins before low tide",
+            "midOffset": -130,
+            "estimatedDuration": "44m 31s",
+            "actualDuration": "60m 03s",
+            "tideWindow": "Falling tide well ahead of low water",
+            "tideScore": 66,
+            "missionRole": "Opened the repeat survey day and captured the monitored upper reach before low tide.",
+            "operationalNote": "This block used the first two flights of the day, creating a long early-tide comparison window before the lowest water level was reached.",
+            "weatherNotes": "Day 1, 18 April 2026. Early survey window with the tide still falling and a broad extent of standing water remaining in the monitored reach.",
+            "surveyNotes": "This was the first block covered on the April repeat day. It provides an early-tide snapshot that can be compared against the later, more exposed rounds.",
+            "tags": [
+              "April repeat",
+              "Upper reach",
+              "Early falling tide",
+              "Flight logs grouped"
+            ],
+            "cardNote": "Early repeat-survey window",
+            "purpose": "Shows the monitored reach well before low water, helping explain how exposed-ground visibility changes through the survey window."
+          }
+        },
+        "2026-06-17": {
+          "area8": {
+            "statusLabel": "Later flood tide",
+            "statusTone": "rose",
+            "start": "16:40",
+            "finish": "17:22",
+            "lowTide": "14:10",
+            "launchOffset": "150 mins after low tide",
+            "midOffset": 171,
+            "estimatedDuration": "40m 18s",
+            "actualDuration": "42m 26s",
+            "tideWindow": "Later flood tide well after low water",
+            "tideScore": 38,
+            "missionRole": "Closed the June repeat survey with a final capture of the monitored reach after the tide had turned.",
+            "operationalNote": "The team paused briefly for light rain before launching, then completed the block during a calm late-session weather window.",
+            "weatherNotes": "Day 2, 17 June 2026. Light rain briefly threatened the capture, but conditions stayed workable and never developed into a heavier shower.",
+            "surveyNotes": "This later-tide June block shows the same monitored reach under a very different water-state, making it useful for explaining why survey timing matters as much as the imagery itself."
+          }
+        }
+      },
+      "volumeChangeComparisons": {
+        "2026-04-18": {
+          "baselineSurveyId": "2026-03-22",
+          "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 3 change footprint.",
+          "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m.",
+          "areas": {
+            "area3": {
+              "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 3 change footprint.",
+              "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m.",
+              "notes": "Area 3 combines the hosted 3D viewer, downloaded classification imagery, and a plain-English measured summary for the live change-analysis page.",
+              "previewMode": "pair",
+              "previewBaselineImage": "area3_height_change_analysis.jpg",
+              "previewCurrentImage": "area3_gain_loss_classification.jpg",
+              "previewBaselineLabel": "Height change analysis",
+              "previewCurrentLabel": "Gain and loss classification",
+              "previewBaselineCaption": "Plan-view height change surface for Area 3, showing where the later survey sits higher or lower across the measured footprint.",
+              "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 3 comparison, useful as a quick client-facing reference image.",
+              "viewerEmbedUrl": "https://hostedsite.vercel.app/?embed=1",
+              "viewerTitle": "Area 3 3D Change Viewer",
+              "viewerSummary": "Interactive terrain preview for Area 3 between 22-23 March 2026 and 18-19 April 2026. Use it with the measured totals and reference maps to inspect where sediment appears to have built up or lowered.",
+              "viewerStats": {
+                "analysedArea": "164,653 m2",
+                "gainArea": "79,834 m2",
+                "lossArea": "84,819 m2",
+                "matchingCells": "98.7%",
+                "gridSize": "0.10 m",
+                "threshold": "+/-0.05 m"
+              },
+              "polygons": [
+                {
+                  "label": "Area 3 change footprint",
+                  "gainM3": 13001.71,
+                  "lossM3": 7430.795,
+                  "netM3": 5570.915,
+                  "confidence": "Measured review",
+                  "summary": "Net accretion across the current Area 3 test footprint, with meaningful local loss still visible in parts of the compared surface.",
+                  "notes": "Aggregate Area 3 summary for the first hosted change-analysis page."
+                }
+              ]
+            },
+            "area8": {
+              "method": "Visual comparison workflow preview for the monitored reach.",
+              "cellSize": "Preview mode",
+              "notes": "This demo area is ready for quantified change reporting, but the current client-safe version focuses on the workflow and visual comparison rather than published cubic-metre totals.",
+              "previewMode": ""
+            }
+          }
+        },
+        "2026-06-16": {
+          "baselineSurveyId": "2026-03-22",
+          "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 3 change footprint.",
+          "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m.",
+          "areas": {
+            "area3": {
+              "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 3 change footprint.",
+              "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m.",
+              "notes": "Area 3 now frames the story from the first March survey through to the latest June survey, with the intermediate April round feeding the wider three-round analysis underneath.",
+              "previewMode": "pair",
+              "previewBaselineImage": "area3_s2_vs_s3_height_change_analysis.png",
+              "previewCurrentImage": "area3_s2_vs_s3_gain_loss_classification.png",
+              "previewBaselineLabel": "Height change analysis",
+              "previewCurrentLabel": "Gain and loss classification",
+              "previewBaselineCaption": "Plan-view height change surface for Area 3, used here as part of the wider March-to-June story so people can see where the latest survey sits higher or lower within the measured footprint.",
+              "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 3 review, useful as a quick client-facing reference image inside the wider March-to-June story.",
+              "viewerEmbedUrl": "https://hostedsite.vercel.app/?embed=1",
+              "viewerTitle": "Area 3 3D Change Viewer",
+              "viewerSummary": "Interactive terrain preview for Area 3 between 22-23 March 2026 and 16-17 June 2026. Use it with the measured totals and reference maps to inspect where sediment appears to have built up or lowered across the wider monitoring window.",
+              "viewerStats": {
+                "analysedArea": "164,653 m2",
+                "gainArea": "79,834 m2",
+                "lossArea": "84,819 m2",
+                "matchingCells": "99.4%",
+                "gridSize": "0.10 m",
+                "threshold": "+/-0.05 m"
+              },
+              "polygons": [
+                {
+                  "label": "Area 3 change footprint",
+                  "gainM3": 510,
+                  "lossM3": 8333,
+                  "netM3": -3224,
+                  "confidence": "Measured review",
+                  "summary": "Net lowering across the current Area 3 test footprint between April and June, with the later survey ending up lower overall.",
+                  "notes": "Aggregate Area 3 summary for the April-to-June change-analysis page."
+                }
+              ]
+            },
+            "area8": {
+              "method": "Visual comparison workflow preview for the monitored reach.",
+              "cellSize": "Preview mode",
+              "notes": "This latest survey pair is included to show how the same reach can be revisited over time even before the measured volume outputs are added to the client-safe demo.",
+              "previewMode": ""
+            }
+          }
+        }
+      },
+      "workflow": [
+        {
+          "stage": "1",
+          "title": "Capture the same reach repeatedly",
+          "copy": "Survey the same monitored reach on repeat dates so the imagery and profile lines stay comparable through time."
+        },
+        {
+          "stage": "2",
+          "title": "Review visual change first",
+          "copy": "Use aerial imagery, panorama context, and sections to understand where the shape and exposure of the reach appears to be changing."
+        },
+        {
+          "stage": "3",
+          "title": "Add measured reporting",
+          "copy": "Once the change workflow is processed, the same interface can show quantified build-up, lowering, and net balance."
+        },
+        {
+          "stage": "4",
+          "title": "Scale to more areas later",
+          "copy": "The same structure can expand from this single-reach demo to a larger multi-area monitoring programme."
+        }
+      ]
+    }
+  ]
+}

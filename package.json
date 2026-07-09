@@ -1,0 +1,14 @@
+{
+  "name": "demo-change-monitoring-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Client-safe demo change monitoring system",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check app.js && node --check server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
