@@ -62,7 +62,7 @@ export const projectConfig = {
     heightModelClient: "surface height model",
     comparison: "change comparison"
   },
-  showAdminTools: false,
+  showAdminTools: true,
   demo: {
     enabled: true,
     visibleAreaIds: ["area8"],
