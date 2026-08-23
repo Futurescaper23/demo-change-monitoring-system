@@ -1,11 +1,12 @@
 export const projectConfig = {
   productName: "FutureScaping Coastal Change Demo",
   branding: {
-    overviewHeroImagePath: "./assets/area8-hero-2026-06-16.png",
+    overviewHeroImagePath: "./survey-data/coastal-change-demo/2026-07-15/area8/ortho.png",
     overviewHeroImagePathBySurvey: {
       "2026-03-22": "./assets/area8-hero-2026-04-18.png",
       "2026-04-18": "./assets/area8-hero-2026-04-18.png",
-      "2026-06-16": "./assets/area8-hero-2026-06-16.png"
+      "2026-06-16": "./assets/area8-hero-2026-06-16.png",
+      "2026-07-15": "./survey-data/coastal-change-demo/2026-07-15/area8/ortho.png"
     },
     areaHeroImagesBySurvey: {
       "2026-03-22": {
@@ -16,6 +17,9 @@ export const projectConfig = {
       },
       "2026-06-16": {
         area8: "./assets/area8-hero-2026-06-16.png"
+      },
+      "2026-07-15": {
+        area8: "./survey-data/coastal-change-demo/2026-07-15/area8/ortho.png"
       }
     },
     areaHeroArtDirectionBySurvey: {
@@ -26,6 +30,9 @@ export const projectConfig = {
         area8: { position: "62% 49%", scale: 0.84, backdropOpacity: 0, backdropBlur: 0, backdropScale: 1.02 }
       },
       "2026-06-16": {
+        area8: { position: "62% 49%", scale: 0.84, backdropOpacity: 0, backdropBlur: 0, backdropScale: 1.02 }
+      },
+      "2026-07-15": {
         area8: { position: "62% 49%", scale: 0.84, backdropOpacity: 0, backdropBlur: 0, backdropScale: 1.02 }
       }
     },

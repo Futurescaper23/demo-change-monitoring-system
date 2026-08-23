@@ -74,12 +74,21 @@ import { volumeChangeSettings } from "./src/data/volumeChange.js?v=20260529g";
 const VALID_TABS = new Set(projectConfig.navigation.tabs);
 const AREA_ENABLED_TOOLBAR_TABS = new Set(["panorama", "volume", "layers", "sections"]);
 const SURVEY_MODEL_TABS = new Set(["areas", "panorama", "volume", "layers", "sections"]);
-const area3TrendPaths = {
-  manifest: "./data/area3-trend-manifest.json",
-  stats: "./data/area3-trend-stats.json",
-  image: "./assets/area3-trend-classification.png"
+const sandboxTrendPaths = {
+  manifest: "./data/area8-trend-manifest.json",
+  stats: "./data/area8-trend-stats.json",
+  image: "./assets/area8-trend-classification-panel.png"
 };
-let area3TrendCachePromise = null;
+let sandboxTrendCachePromise = null;
+
+const SANDBOX_REFERENCE_PAIRS = [
+  { pair: "A_vs_B", title: "Survey 1 vs Survey 2", badge: "Comparison 1", window: "March to April" },
+  { pair: "A_vs_C", title: "Survey 1 vs Survey 3", badge: "Comparison 2", window: "March to June" },
+  { pair: "A_vs_D", title: "Survey 1 vs Survey 4", badge: "Comparison 3", window: "March to July" },
+  { pair: "B_vs_C", title: "Survey 2 vs Survey 3", badge: "Comparison 4", window: "April to June" },
+  { pair: "B_vs_D", title: "Survey 2 vs Survey 4", badge: "Comparison 5", window: "April to July" },
+  { pair: "C_vs_D", title: "Survey 3 vs Survey 4", badge: "Comparison 6", window: "June to July" }
+];
 
   const EXPLICIT_SECTION_IMAGE_TRACKS = {
     area1: [
@@ -3308,8 +3317,7 @@ async function renderVolume() {
   const project = currentProject();
   const sandboxComparisonEntries = Object.entries(project.volumeChangeComparisons || {})
     .filter(([, entry]) => entry?.areas?.[volumeChangeSettings.sandboxAreaId]);
-  const sandboxComparisonEntry = sandboxComparisonEntries.find(([surveyId]) => surveyId === state.surveyId)
-    || sandboxComparisonEntries
+  const sandboxComparisonEntry = sandboxComparisonEntries
       .sort((a, b) => {
         const aIndex = project.surveys.findIndex((item) => item.id === a[0]);
         const bIndex = project.surveys.findIndex((item) => item.id === b[0]);
@@ -3353,20 +3361,14 @@ async function renderVolume() {
     || "Show base terrain turns the latest beach surface on or off. With it on, you can see the actual shape of the most recent scan underneath the colours. With it off, the change colours are easier to read on their own. Bigger point size makes the surface look fuller and easier to see. Smaller point size makes it look finer and lighter.";
   const viewerGuideUse = areaDataset?.viewerGuideUse
     || "Start by turning the model around and zooming into the area you care about. If the view feels too busy, switch off Show base terrain to focus on the colour change only. If the model looks too thin or patchy, increase point size. If it looks too chunky, reduce point size for a cleaner look.";
-  const trendData = area.id === volumeChangeSettings.sandboxAreaId ? await loadArea3TrendData() : null;
+  const trendData = area.id === volumeChangeSettings.sandboxAreaId ? await loadSandboxTrendData() : null;
 
   const [
     baselineImageSrc,
     currentImageSrc,
     previewImageSrc,
     previewBaselineImageSrc,
-    previewCurrentImageSrc,
-    surveyOneVsTwoHeightSrc,
-    surveyOneVsTwoClassSrc,
-    surveyOneVsThreeHeightSrc,
-    surveyOneVsThreeClassSrc,
-    surveyTwoVsThreeHeightSrc,
-    surveyTwoVsThreeClassSrc
+    previewCurrentImageSrc
   ] = await Promise.all([
     baselineSurvey ? resolveExistingAsset(surveyAssetCandidates(project.id, baselineSurvey.id, sandboxArea.id, "ortho.jpg")) : Promise.resolve(""),
     resolveExistingAsset(surveyAssetCandidates(project.id, survey.id, sandboxArea.id, "ortho.jpg")),
@@ -3387,91 +3389,14 @@ async function renderVolume() {
         surveyAssetPath(project.id, survey.id, sandboxArea.id, previewCurrentImageFile),
         baselineSurvey ? surveyAssetPath(project.id, baselineSurvey.id, sandboxArea.id, previewCurrentImageFile) : ""
       ])
-      : Promise.resolve(""),
-    resolveExistingAsset([
-      surveyAssetPath(project.id, "2026-04-18", sandboxArea.id, "area3_s1_vs_s2_height_change_analysis.png"),
-      surveyAssetPath(project.id, "2026-04-18", sandboxArea.id, "area3_height_change_analysis.png"),
-      surveyAssetPath(project.id, "2026-04-18", sandboxArea.id, "area3_height_change_analysis.jpg")
-    ]),
-    resolveExistingAsset([
-      surveyAssetPath(project.id, "2026-04-18", sandboxArea.id, "area3_s1_vs_s2_gain_loss_classification.png"),
-      surveyAssetPath(project.id, "2026-04-18", sandboxArea.id, "area3_gain_loss_classification.png"),
-      surveyAssetPath(project.id, "2026-04-18", sandboxArea.id, "area3_gain_loss_classification.jpg")
-    ]),
-    resolveExistingAsset([
-      surveyAssetPath(project.id, "2026-06-16", sandboxArea.id, "area3_s1_vs_s3_height_change_analysis.png")
-    ]),
-    resolveExistingAsset([
-      surveyAssetPath(project.id, "2026-06-16", sandboxArea.id, "area3_s1_vs_s3_gain_loss_classification.png")
-    ]),
-    resolveExistingAsset([
-      surveyAssetPath(project.id, "2026-06-16", sandboxArea.id, "area3_s2_vs_s3_height_change_analysis.png")
-    ]),
-    resolveExistingAsset([
-      surveyAssetPath(project.id, "2026-06-16", sandboxArea.id, "area3_s2_vs_s3_gain_loss_classification.png")
-    ])
+      : Promise.resolve("")
   ]);
+  const allReferenceMaps = await loadSandboxReferenceMaps(project.id, sandboxArea.id);
 
   const baselineImageExists = Boolean(baselineImageSrc);
   const currentImageExists = Boolean(currentImageSrc);
   const useSinglePreview = hasConfiguredRows && previewMode === "single" && Boolean(previewImageSrc);
   const usePairedPreview = hasConfiguredRows && previewMode === "pair" && Boolean(previewBaselineImageSrc) && Boolean(previewCurrentImageSrc);
-  const allReferenceMaps = [
-    {
-      eyebrow: "Height change analysis",
-      title: "Survey 1 vs Survey 2",
-      badge: "Comparison 1",
-      label: "Measured surface difference",
-      src: surveyOneVsTwoHeightSrc,
-      alt: `${area.label} Survey 1 versus Survey 2 height change analysis`,
-      caption: "Survey 1 versus Survey 2 height change map. Use this to see where the later survey sits higher or lower across the measured footprint."
-    },
-    {
-      eyebrow: "Height change analysis",
-      title: "Survey 1 vs Survey 3",
-      badge: "Comparison 2",
-      label: "Measured surface difference",
-      src: surveyOneVsThreeHeightSrc,
-      alt: `${area.label} Survey 1 versus Survey 3 height change analysis`,
-      caption: "Survey 1 versus Survey 3 height change map. This gives the longer-gap view from the March round straight through to June."
-    },
-    {
-      eyebrow: "Height change analysis",
-      title: "Survey 2 vs Survey 3",
-      badge: "Comparison 3",
-      label: "Measured surface difference",
-      src: surveyTwoVsThreeHeightSrc,
-      alt: `${area.label} Survey 2 versus Survey 3 height change analysis`,
-      caption: "Survey 2 versus Survey 3 height change map. This isolates what changed between the April and June rounds."
-    },
-    {
-      eyebrow: "Gain and loss classes",
-      title: "Survey 1 vs Survey 2",
-      badge: "Comparison 1",
-      label: "Simplified class view",
-      src: surveyOneVsTwoClassSrc,
-      alt: `${area.label} Survey 1 versus Survey 2 gain and loss classification`,
-      caption: "Survey 1 versus Survey 2 class map. This is the simpler flat-view version for quick client-facing reading."
-    },
-    {
-      eyebrow: "Gain and loss classes",
-      title: "Survey 1 vs Survey 3",
-      badge: "Comparison 2",
-      label: "Simplified class view",
-      src: surveyOneVsThreeClassSrc,
-      alt: `${area.label} Survey 1 versus Survey 3 gain and loss classification`,
-      caption: "Survey 1 versus Survey 3 class map. This shows the broader build-up and lowering pattern across the full time gap."
-    },
-    {
-      eyebrow: "Gain and loss classes",
-      title: "Survey 2 vs Survey 3",
-      badge: "Comparison 3",
-      label: "Simplified class view",
-      src: surveyTwoVsThreeClassSrc,
-      alt: `${area.label} Survey 2 versus Survey 3 gain and loss classification`,
-      caption: "Survey 2 versus Survey 3 class map. Use this for the latest repeat-survey pattern only."
-    }
-  ].filter((item) => item.src);
 
   const totals = configuredPolygons.reduce((acc, item) => {
     acc.gain += Number(item.gainM3 || 0);
@@ -3575,9 +3500,9 @@ async function renderVolume() {
       </div>
       <figure class="volume-trend-map volume-trend-map--rotated">
         <div class="volume-trend-map__stage">
-          <img src="${escapeAttr(data.imageSrc)}" alt="Trend classification map for Area 3 across all three survey rounds">
+          <img src="${escapeAttr(data.imageSrc)}" alt="Trend classification map for ${escapeAttr(data.manifest.area_label || sandboxArea.label)} across the available survey rounds">
         </div>
-        <figcaption class="muted">Use this map as the long-term view. The 3D viewer shows one comparison at a time, while this shows the wider three-round pattern in one place.</figcaption>
+        <figcaption class="muted">Use this map as the long-term view. The 3D viewer focuses on the latest comparison, while this shows the broader multi-round pattern in one place.</figcaption>
       </figure>
       <div class="volume-trend-classes">
         ${sortedTrendClasses(data.stats.trend_classes || []).map((item) => `
@@ -3598,8 +3523,8 @@ async function renderVolume() {
   els.volumeMetricGrid.classList.add("is-hidden");
 
   els.volumeSandboxBanner.innerHTML = `
-    <strong>Sandbox Preview - Area 3 only</strong>
-    <p>We are currently using ${escapeHtml(sandboxArea.label)} as the live testing area for sandbar volume change. This page is here to prove the workflow, imagery, and plain-English reporting before the same method is rolled out to the other monitored areas.</p>
+    <strong>Demo Preview - ${escapeHtml(sandboxArea.overviewCode)}</strong>
+    <p>This demo is now showing the latest Area 8 change-analysis package, including the July comparison figures, supporting flat maps, and the client-facing 3D review link.</p>
   `;
 
   if (!baselineSurvey && !volumeDataset) {
@@ -3713,8 +3638,8 @@ async function renderVolume() {
           caption: previewCurrentCaption || `${area.label} with the measured change overlay shown against the later survey context.`
         }
       ]);
-      els.volumeSummary.textContent = `${area.label} is being compared between ${baselineSurvey?.shortDate || baselineLabel} and ${survey.shortDate}. This setup now pairs the measured totals with a live 3D viewer and all three flat comparison sets so the change is easier to interpret from different angles.`;
-      els.volumeImageSummary.textContent = "All three survey comparisons are shown together here: first the three height-change maps, then the three simpler gain-and-loss class maps. Click any one to open it full screen and zoom in.";
+      els.volumeSummary.textContent = `${area.label} is being compared between ${baselineSurvey?.shortDate || baselineLabel} and ${survey.shortDate}. This setup pairs the measured totals with a live 3D viewer and the full supporting comparison-map set so the change is easier to interpret from different angles.`;
+      els.volumeImageSummary.textContent = "The full Area 8 July package is shown here: the height-change maps first, then the simpler gain-and-loss class maps. Click any image to open it full screen and zoom in.";
     } else {
       const beforeAfterCards = [];
       if (baselineImageExists) {
@@ -5240,13 +5165,13 @@ function formatSquareMetres(value) {
   return `${number.toLocaleString("en-GB", { maximumFractionDigits: 0 })} m2`;
 }
 
-async function loadArea3TrendData() {
-  if (!area3TrendCachePromise) {
-    area3TrendCachePromise = (async () => {
+async function loadSandboxTrendData() {
+  if (!sandboxTrendCachePromise) {
+    sandboxTrendCachePromise = (async () => {
       const [manifestResponse, statsResponse, imageSrc] = await Promise.all([
-        fetch(area3TrendPaths.manifest).catch(() => null),
-        fetch(area3TrendPaths.stats).catch(() => null),
-        resolveExistingAsset([area3TrendPaths.image])
+        fetch(sandboxTrendPaths.manifest).catch(() => null),
+        fetch(sandboxTrendPaths.stats).catch(() => null),
+        resolveExistingAsset([sandboxTrendPaths.image])
       ]);
       if (!manifestResponse?.ok || !statsResponse?.ok || !imageSrc) {
         return null;
@@ -5258,31 +5183,58 @@ async function loadArea3TrendData() {
       return { manifest, stats, imageSrc };
     })();
   }
-  return area3TrendCachePromise;
+  return sandboxTrendCachePromise;
 }
 
 function trendPairSummaries(stats) {
-  const pairAB = stats?.classification_inputs?.primary_pair_1;
-  const pairBC = stats?.classification_inputs?.primary_pair_2;
-  const pairAC = stats?.classification_inputs?.cumulative_pairs?.[0];
-  return [
-    pairAB ? { label: "Survey 1 vs Survey 2", dateRange: pairAB.date_range, intervalDays: pairAB.interval_days, ...pairAB.volume_stats } : null,
-    pairAC ? { label: "Survey 1 vs Survey 3", dateRange: "22 Mar 2026 to 17 Jun 2026", intervalDays: 87, ...pairAC.volume_stats } : null,
-    pairBC ? { label: "Survey 2 vs Survey 3", dateRange: pairBC.date_range, intervalDays: pairBC.interval_days, ...pairBC.volume_stats } : null
-  ].filter(Boolean).map((item) => {
-    const net = Number(item.net_volume_m3 || 0);
+  const pairs = Array.isArray(stats?.classification_inputs?.cumulative_pairs)
+    ? stats.classification_inputs.cumulative_pairs
+    : [];
+  return pairs.map((item) => {
+    const label = String(item.pair || "")
+      .replaceAll("->", " vs ")
+      .trim() || "Survey pair";
+    const net = Number(item.volume_stats?.net_volume_m3 || 0);
     return {
-      label: item.label,
-      added: Number(item.added_volume_m3 || 0),
-      removed: Number(item.removed_volume_m3 || 0),
+      label,
+      added: Number(item.volume_stats?.added_volume_m3 || 0),
+      removed: Number(item.volume_stats?.removed_volume_m3 || 0),
       net,
       readoutTitle: net >= 0 ? "Net build-up" : "Net lowering",
       readoutCopy: net >= 0
-        ? `${item.label} ends with more material in the later survey overall.`
-        : `${item.label} ends with less material in the later survey overall.`,
-      supportingCopy: `${item.dateRange} • ${item.intervalDays} day gap • ${fixed(item.matching_cells_percent || 0, 1)}% of cells matched cleanly.`
+        ? `${label} ends with more material in the later survey overall.`
+        : `${label} ends with less material in the later survey overall.`,
+      supportingCopy: `${item.date_range || "Date range unavailable"} • ${item.interval_days || 0} day gap • ${fixed(item.volume_stats?.matching_cells_percent || 0, 1)}% of cells matched cleanly.`
     };
   });
+}
+
+async function loadSandboxReferenceMaps(projectId, areaId) {
+  const cards = await Promise.all(SANDBOX_REFERENCE_PAIRS.flatMap((item) => {
+    const heightPath = surveyAssetPath(projectId, "2026-07-15", areaId, `${areaId}_${item.pair}_height_change_analysis.png`);
+    const classPath = surveyAssetPath(projectId, "2026-07-15", areaId, `${areaId}_${item.pair}_gain_loss_classification.png`);
+    return [
+      resolveExistingAsset([heightPath]).then((src) => src ? {
+        eyebrow: "Height change analysis",
+        title: item.title,
+        badge: item.badge,
+        label: item.window,
+        src,
+        alt: `${areaId} ${item.title} height change analysis`,
+        caption: `${item.title} height change map for the Area 8 July package. Use this to see where the later survey sits higher or lower across the measured footprint.`
+      } : null),
+      resolveExistingAsset([classPath]).then((src) => src ? {
+        eyebrow: "Gain and loss classes",
+        title: item.title,
+        badge: item.badge,
+        label: item.window,
+        src,
+        alt: `${areaId} ${item.title} gain and loss classification`,
+        caption: `${item.title} simplified class map for the Area 8 July package. This is the flatter client-facing read of the same comparison.`
+      } : null)
+    ];
+  }));
+  return cards.filter(Boolean);
 }
 
 function renderVolumeReferenceGallery(cards, options = {}) {

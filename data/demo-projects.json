@@ -55,12 +55,25 @@
           "shortDate": "16-17 Jun 2026",
           "dateFrom": "2026-06-16",
           "dateTo": "2026-06-17",
-          "status": "Latest round loaded",
+          "status": "Repeat survey loaded",
           "readiness": "assets linked",
           "assetFolder": "2026-06-16",
           "dataFolder": "2026-06-16",
           "comparisonBaseline": "2026-04-18",
           "notes": "Latest repeat round for longer-range comparison."
+        },
+        {
+          "id": "2026-07-15",
+          "label": "Survey Round 4 - 15 July 2026",
+          "shortDate": "15 Jul 2026",
+          "dateFrom": "2026-07-15",
+          "dateTo": "2026-07-15",
+          "status": "Latest round loaded",
+          "readiness": "assets linked",
+          "assetFolder": "2026-07-15",
+          "dataFolder": "2026-07-15",
+          "comparisonBaseline": "2026-06-16",
+          "notes": "Latest repeat round with the full Scan 4 comparison package."
         }
       ],
       "surveyAreaOverrides": {
@@ -115,95 +128,85 @@
       "volumeChangeComparisons": {
         "2026-04-18": {
           "baselineSurveyId": "2026-03-22",
-          "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 3 change footprint.",
-          "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m.",
+          "method": "Visual comparison workflow preview for the monitored reach before the full Area 8 measured package was added.",
+          "cellSize": "Preview mode",
           "areas": {
-            "area3": {
-              "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 3 change footprint.",
-              "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m.",
-              "notes": "Area 3 combines the hosted 3D viewer, downloaded classification imagery, and a plain-English measured summary for the live change-analysis page.",
-              "previewMode": "pair",
-              "previewBaselineImage": "area3_height_change_analysis.jpg",
-              "previewCurrentImage": "area3_gain_loss_classification.jpg",
-              "previewBaselineLabel": "Height change analysis",
-              "previewCurrentLabel": "Gain and loss classification",
-              "previewBaselineCaption": "Plan-view height change surface for Area 3, showing where the later survey sits higher or lower across the measured footprint.",
-              "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 3 comparison, useful as a quick client-facing reference image.",
-              "viewerEmbedUrl": "https://hostedsite.vercel.app/?embed=1",
-              "viewerTitle": "Area 3 3D Change Viewer",
-              "viewerSummary": "Interactive terrain preview for Area 3 between 22-23 March 2026 and 18-19 April 2026. Use it with the measured totals and reference maps to inspect where sediment appears to have built up or lowered.",
-              "viewerStats": {
-                "analysedArea": "164,653 m2",
-                "gainArea": "79,834 m2",
-                "lossArea": "84,819 m2",
-                "matchingCells": "98.7%",
-                "gridSize": "0.10 m",
-                "threshold": "+/-0.05 m"
-              },
-              "polygons": [
-                {
-                  "label": "Area 3 change footprint",
-                  "gainM3": 13001.71,
-                  "lossM3": 7430.795,
-                  "netM3": 5570.915,
-                  "confidence": "Measured review",
-                  "summary": "Net accretion across the current Area 3 test footprint, with meaningful local loss still visible in parts of the compared surface.",
-                  "notes": "Aggregate Area 3 summary for the first hosted change-analysis page."
-                }
-              ]
-            },
             "area8": {
               "method": "Visual comparison workflow preview for the monitored reach.",
               "cellSize": "Preview mode",
-              "notes": "This demo area is ready for quantified change reporting, but the current client-safe version focuses on the workflow and visual comparison rather than published cubic-metre totals.",
+              "notes": "This earlier repeat survey stays in the demo for context, but the measured Area 8 volumetric reporting is now focused on the July Scan 4 package.",
               "previewMode": ""
             }
           }
         },
         "2026-06-16": {
-          "baselineSurveyId": "2026-03-22",
-          "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 3 change footprint.",
-          "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m.",
+          "baselineSurveyId": "2026-04-18",
+          "method": "Visual comparison workflow preview for the monitored reach before the full Area 8 measured package was added.",
+          "cellSize": "Preview mode",
           "areas": {
-            "area3": {
-              "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 3 change footprint.",
-              "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m.",
-              "notes": "Area 3 now frames the story from the first March survey through to the latest June survey, with the intermediate April round feeding the wider three-round analysis underneath.",
+            "area8": {
+              "method": "Visual comparison workflow preview for the monitored reach.",
+              "cellSize": "Preview mode",
+              "notes": "This June repeat survey remains available for compare and sections, while the measured volume page now showcases the July package.",
+              "previewMode": ""
+            }
+          }
+        },
+        "2026-07-15": {
+          "baselineSurveyId": "2026-06-16",
+          "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 8 monitoring zones, with the June-to-July maps shown up front and the wider available survey-pair references kept underneath.",
+          "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m",
+          "areas": {
+            "area8": {
+              "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 8 monitoring zones, with the June-to-July maps shown up front and the wider available survey-pair references kept underneath.",
+              "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m",
+              "notes": "Area 8 now carries its full July comparison package in the monitoring platform, with the June-to-July view used as the lead comparison and the other available survey-pair maps kept in the same area for supporting reference.",
               "previewMode": "pair",
-              "previewBaselineImage": "area3_s2_vs_s3_height_change_analysis.png",
-              "previewCurrentImage": "area3_s2_vs_s3_gain_loss_classification.png",
+              "previewBaselineImage": "area8_C_vs_D_height_change_analysis.png",
+              "previewCurrentImage": "area8_C_vs_D_gain_loss_classification.png",
               "previewBaselineLabel": "Height change analysis",
               "previewCurrentLabel": "Gain and loss classification",
-              "previewBaselineCaption": "Plan-view height change surface for Area 3, used here as part of the wider March-to-June story so people can see where the latest survey sits higher or lower within the measured footprint.",
-              "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 3 review, useful as a quick client-facing reference image inside the wider March-to-June story.",
-              "viewerEmbedUrl": "https://hostedsite.vercel.app/?embed=1",
-              "viewerTitle": "Area 3 3D Change Viewer",
-              "viewerSummary": "Interactive terrain preview for Area 3 between 22-23 March 2026 and 16-17 June 2026. Use it with the measured totals and reference maps to inspect where sediment appears to have built up or lowered across the wider monitoring window.",
+              "previewLabel": "Area 8 July Change Review",
+              "previewBaselineCaption": "Plan-view height change surface for Area 8 between the June and July surveys across the current monitored setup.",
+              "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 8 June-to-July comparison.",
+              "viewerEmbedUrl": "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1",
+              "viewerTitle": "Area 8 3D Change Viewer",
+              "viewerSummary": "Interactive terrain preview for Area 8 centred on the June-to-July comparison, with the other available survey-pair references now sitting alongside it in the same review flow.",
               "viewerStats": {
-                "analysedArea": "164,653 m2",
-                "gainArea": "79,834 m2",
-                "lossArea": "84,819 m2",
-                "matchingCells": "99.4%",
+                "analysedArea": "606,347 m2",
+                "matchingCells": "95.7%",
                 "gridSize": "0.10 m",
                 "threshold": "+/-0.05 m"
               },
               "polygons": [
                 {
-                  "label": "Area 3 change footprint",
-                  "gainM3": 510,
-                  "lossM3": 8333,
-                  "netM3": -3224,
+                  "label": "Monitored zone",
+                  "gainM3": 30469.038796,
+                  "lossM3": 1.594467,
+                  "netM3": 30467.44433,
                   "confidence": "Measured review",
-                  "summary": "Net lowering across the current Area 3 test footprint between April and June, with the later survey ending up lower overall.",
-                  "notes": "Aggregate Area 3 summary for the April-to-June change-analysis page."
+                  "summary": "Net accretion across Monitored zone between Survey Round 3 - 16 June 2026 and Survey Round 4 - 15 July 2026.",
+                  "notes": "Area 8 operational monitoring zone."
+                },
+                {
+                  "label": "Central",
+                  "gainM3": 43495.603015,
+                  "lossM3": 1.646537,
+                  "netM3": 43493.956477,
+                  "confidence": "Measured review",
+                  "summary": "Net accretion across Central between Survey Round 3 - 16 June 2026 and Survey Round 4 - 15 July 2026.",
+                  "notes": "Area 8 operational monitoring zone."
+                },
+                {
+                  "label": "Wadebridge",
+                  "gainM3": 6666.863341,
+                  "lossM3": 3388.262514,
+                  "netM3": 3278.600827,
+                  "confidence": "Measured review",
+                  "summary": "Net accretion across Wadebridge between Survey Round 3 - 16 June 2026 and Survey Round 4 - 15 July 2026.",
+                  "notes": "Area 8 operational monitoring zone."
                 }
               ]
-            },
-            "area8": {
-              "method": "Visual comparison workflow preview for the monitored reach.",
-              "cellSize": "Preview mode",
-              "notes": "This latest survey pair is included to show how the same reach can be revisited over time even before the measured volume outputs are added to the client-safe demo.",
-              "previewMode": ""
             }
           }
         }
