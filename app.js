@@ -2860,8 +2860,8 @@ async function renderSections() {
         ? "Use the aerial image for ground appearance and context."
         : "Use colour elevation for quicker height reading.",
       body: state.sectionBasemap === "ortho"
-        ? "Aerial View shows the real surface appearance underneath the section line. Switch to Colour Elevation when you want the height pattern to be easier to read at a glance."
-        : "Colour Elevation makes changes in height easier to spot. Switch back to Aerial View when you want to relate the section line to visible features on the ground."
+        ? "Aerial View shows the real surface appearance underneath the section line. Move across the chart to follow the section, then click to lock a point before using the cards below. Switch to Colour Elevation when you want the height pattern to be easier to read at a glance."
+        : "Colour Elevation makes changes in height easier to spot. Move across the chart to follow the section, then click to lock a point before using the cards below. Switch back to Aerial View when you want to relate the section line to visible features on the ground."
     }),
     sectionInsightCard({
       eyebrow: "Survey Context",
