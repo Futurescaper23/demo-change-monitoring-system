@@ -3392,18 +3392,18 @@ textarea {
 }
 
 .volume-trend-map[data-area-id="area8"] .volume-trend-map__stage {
-  min-height: 440px;
+  min-height: 0;
 }
 
 .volume-trend-map[data-area-id="area8"] .volume-trend-map__stage img {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 108%;
-  height: auto;
+  width: auto;
+  height: 100%;
   max-width: none;
   max-height: none;
-  transform: translate(-50%, -50%) rotate(90deg) scale(1.72);
+  transform: translate(-50%, -50%) rotate(90deg);
   transform-origin: center;
 }
 
