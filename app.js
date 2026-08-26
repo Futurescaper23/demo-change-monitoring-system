@@ -152,6 +152,31 @@ const SECTION_PROFILE_COLORS = [
   "#ff9ad5"
 ];
 
+const DEFAULT_SECTION_CHART_DISPLAY_BY_PROJECT = {
+  "padstow-estuary": {
+    maxDisplayHeight: 3,
+    showClippedOverlay: true
+  }
+};
+
+const SECTION_CHART_DISPLAY_OVERRIDES = {
+  "padstow-estuary:area8:A8-01": {
+    minDisplayHeight: -2,
+    maxDisplayHeight: 4,
+    showClippedOverlay: true
+  },
+  "padstow-estuary:area8:A8-02": {
+    minDisplayHeight: -2,
+    maxDisplayHeight: 4,
+    showClippedOverlay: true
+  },
+  "padstow-estuary:area8:A8-03": {
+    minDisplayHeight: -2,
+    maxDisplayHeight: 4,
+    showClippedOverlay: true
+  }
+};
+
 const BASELINE_AREA_OVERVIEW = {
   area1: {
     title: "A1",
@@ -1742,8 +1767,8 @@ const HELP_STORY = [
     title: "How to Use Sections",
     paragraphs: [
       "Open the Sections tab inside an area to view fixed section lines and their profile graphs.",
-      "Choose Section 1, 2, or 3, view where that line runs across the map, and then move across the chart to follow the same point on the section line. You can also tick more than one survey profile to compare the same fixed line between rounds.",
-      "Use Sections when you want a measured cross-section through the estuary surface rather than a broad visual overview."
+      "Choose Section 1, 2, or 3, view where that line runs across the map, and then move across the chart to follow the same point on the section line. Click on the profile when you want to lock a specific point in place and compare that exact position between survey rounds.",
+      "The grey cards underneath become much more useful once a point is locked, because they summarise the measured difference, local trend, and quick visual guide for that spot. Use Sections when you want a measured cross-section through the estuary surface rather than a broad visual overview."
     ]
   },
   {
@@ -4221,11 +4246,11 @@ function openCurrentSectionComparisonSnapshot() {
 
 function sectionComparisonWarnings(orderedProfiles) {
   const warnings = [];
-  const hasWaterSegment = orderedProfiles.some((profile) => profile.heightAtFocus <= -2.99);
+  const hasWaterSegment = orderedProfiles.some((profile) => profile.heightAtFocus <= -1.99);
   const hasBeyondSurveySegment = orderedProfiles.some((profile) => profile.heightAtFocus === 0);
 
   if (hasWaterSegment) {
-    warnings.push("Flat -3 m stretches usually mark water, so they are not reliable for comparison.");
+    warnings.push("Flat lower-edge stretches usually mark water, so they are not reliable for comparison.");
   }
 
   if (hasBeyondSurveySegment) {
@@ -4529,6 +4554,19 @@ function renderSectionProfileControls(profiles) {
   `).join("");
 }
 
+function sectionChartDisplaySettings(section) {
+  const projectId = currentProject()?.id;
+  const areaId = currentArea()?.id;
+  if (!projectId || !areaId || !section?.id) {
+    return null;
+  }
+  return (
+    SECTION_CHART_DISPLAY_OVERRIDES[`${projectId}:${areaId}:${section.id}`]
+    || DEFAULT_SECTION_CHART_DISPLAY_BY_PROJECT[projectId]
+    || null
+  );
+}
+
 function drawSectionChart(profiles, section, anchorSurveyId = state.surveyId) {
   const width = 960;
   const height = 340;
@@ -4544,8 +4582,15 @@ function drawSectionChart(profiles, section, anchorSurveyId = state.surveyId) {
 
   const minX = Math.min(...allRows.map((row) => row.distance));
   const maxX = Math.max(...allRows.map((row) => row.distance));
-  const minY = Math.min(...allRows.map((row) => row.height));
-  const maxY = Math.max(...allRows.map((row) => row.height));
+  const displaySettings = sectionChartDisplaySettings(section);
+  const rawMinY = Math.min(...allRows.map((row) => row.height));
+  const rawMaxY = Math.max(...allRows.map((row) => row.height));
+  const minY = Number.isFinite(displaySettings?.minDisplayHeight)
+    ? Math.max(rawMinY, displaySettings.minDisplayHeight)
+    : rawMinY;
+  const maxY = Number.isFinite(displaySettings?.maxDisplayHeight)
+    ? Math.min(rawMaxY, displaySettings.maxDisplayHeight)
+    : rawMaxY;
   const xSpan = Math.max(1, maxX - minX);
   const ySpan = Math.max(1, maxY - minY);
   const xTicks = buildAxisTicks(minX, maxX, 4);
@@ -4560,8 +4605,23 @@ function drawSectionChart(profiles, section, anchorSurveyId = state.surveyId) {
   const profileSeries = activeProfiles.map((profile) => {
     const points = profile.rows.map((row, index) => {
       const x = pad.left + ((row.distance - minX) / xSpan) * plotWidth;
-      const y = height - pad.bottom - ((row.height - minY) / ySpan) * plotHeight;
-      return { index, x, y, row };
+      const displayHeight = clamp(
+        row.height,
+        Number.isFinite(displaySettings?.minDisplayHeight) ? displaySettings.minDisplayHeight : row.height,
+        Number.isFinite(displaySettings?.maxDisplayHeight) ? displaySettings.maxDisplayHeight : row.height
+      );
+      const y = height - pad.bottom - ((displayHeight - minY) / ySpan) * plotHeight;
+      return {
+        index,
+        x,
+        y,
+        row,
+        displayHeight,
+        isClipped: (
+          (Number.isFinite(displaySettings?.minDisplayHeight) && row.height < displaySettings.minDisplayHeight)
+          || (Number.isFinite(displaySettings?.maxDisplayHeight) && row.height > displaySettings.maxDisplayHeight)
+        )
+      };
     });
     const buildSegments = (predicate) => {
       const segments = [];
@@ -4584,16 +4644,24 @@ function drawSectionChart(profiles, section, anchorSurveyId = state.surveyId) {
       points,
       measuredSegments: buildSegments((point) => point.row.height !== 0),
       zeroSegments: buildSegments((point) => point.row.height === 0),
+      clippedSegments: buildSegments((point) => point.isClipped),
       hoverRow: nearestSectionRow(profile.rows, hoverDistance)
     };
   });
   const anchorProfile = profileSeries.find((profile) => profile.survey.id === anchorSurveyId) || profileSeries[0];
   const activePoint = anchorProfile?.hoverRow
-    ? {
-        x: pad.left + ((anchorProfile.hoverRow.distance - minX) / xSpan) * plotWidth,
-        y: height - pad.bottom - ((anchorProfile.hoverRow.height - minY) / ySpan) * plotHeight,
-        row: anchorProfile.hoverRow
-      }
+    ? (() => {
+        const activeDisplayHeight = clamp(
+          anchorProfile.hoverRow.height,
+          Number.isFinite(displaySettings?.minDisplayHeight) ? displaySettings.minDisplayHeight : anchorProfile.hoverRow.height,
+          Number.isFinite(displaySettings?.maxDisplayHeight) ? displaySettings.maxDisplayHeight : anchorProfile.hoverRow.height
+        );
+        return {
+          x: pad.left + ((anchorProfile.hoverRow.distance - minX) / xSpan) * plotWidth,
+          y: height - pad.bottom - ((activeDisplayHeight - minY) / ySpan) * plotHeight,
+          row: anchorProfile.hoverRow
+        };
+      })()
     : null;
   const xTickMarkup = xTicks.map((tick) => {
     const x = pad.left + ((tick - minX) / xSpan) * plotWidth;
@@ -4642,14 +4710,30 @@ function drawSectionChart(profiles, section, anchorSurveyId = state.surveyId) {
         return `<polyline fill="none" stroke="${profile.color}" opacity="0.6" stroke-width="${zeroStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" points="${buildPointString(segment)}"/>`;
       })
       .join("");
+    const clippedLines = displaySettings?.showClippedOverlay
+      ? profile.clippedSegments
+        .filter((segment) => segment.length >= 2)
+        .map((segment) => {
+          const overlayStrokeWidth = isComparisonMode
+            ? (profile.survey.id === anchorSurveyId ? 1.75 : 1.55)
+            : 2.35;
+          return `<polyline fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="${overlayStrokeWidth}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 5" points="${buildPointString(segment)}"/>`;
+        })
+        .join("")
+      : "";
     const hoverDot = profile.hoverRow && hoverDistance !== null
       ? (() => {
           const x = pad.left + ((profile.hoverRow.distance - minX) / xSpan) * plotWidth;
-          const y = height - pad.bottom - ((profile.hoverRow.height - minY) / ySpan) * plotHeight;
+          const hoverDisplayHeight = clamp(
+            profile.hoverRow.height,
+            Number.isFinite(displaySettings?.minDisplayHeight) ? displaySettings.minDisplayHeight : profile.hoverRow.height,
+            Number.isFinite(displaySettings?.maxDisplayHeight) ? displaySettings.maxDisplayHeight : profile.hoverRow.height
+          );
+          const y = height - pad.bottom - ((hoverDisplayHeight - minY) / ySpan) * plotHeight;
           return `<circle cx="${fixed(x, 2)}" cy="${fixed(y, 2)}" r="4.2" fill="${profile.color}" stroke="rgba(255,255,255,0.85)" stroke-width="1.5"/>`;
         })()
       : "";
-    return `${zeroLines}${measuredLines}${hoverDot}`;
+    return `${zeroLines}${measuredLines}${clippedLines}${hoverDot}`;
   }).join("");
   const activeLabel = activePoint ? `
     <g>
