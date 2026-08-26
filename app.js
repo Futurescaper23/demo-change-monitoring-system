@@ -7399,8 +7399,8 @@ function renderVolumeImageLightboxLegend(items = []) {
   els.volumeImageLightboxLegend.classList.remove("is-hidden");
   els.volumeImageLightboxLegend.innerHTML = `
     <div class="volume-image-lightbox__legend-head">
-      <p class="eyebrow">Trend summary</p>
-      <h4>Abbreviated class table</h4>
+      <p class="eyebrow">Map Legend</p>
+      <h4>Trend classes</h4>
     </div>
     <div class="volume-image-lightbox__legend-list">
       ${items.map((item) => `
@@ -7409,8 +7409,6 @@ function renderVolumeImageLightboxLegend(items = []) {
             <span class="volume-trend-swatch" style="background:${escapeAttr(item.color)};"></span>
             <strong>${escapeHtml(item.label)}</strong>
           </div>
-          <p>${escapeHtml(item.description)}</p>
-          <p class="muted">${escapeHtml(item.meta)}</p>
         </article>
       `).join("")}
     </div>
