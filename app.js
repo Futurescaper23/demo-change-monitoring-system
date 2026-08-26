@@ -68,6 +68,8 @@ import { volumeChangeSettings } from "./src/data/volumeChange.js?v=20260529g";
   sectionArea: null,
   sectionComparisonSnapshot: null,
   volumeLightboxZoom: 1,
+  volumeLightboxRotation: 0,
+  volumeLightboxLegendItems: [],
   accessUsers: []
     };
 
@@ -491,8 +493,10 @@ const els = {
   volumeImageLightboxEyebrow: byId("volumeImageLightboxEyebrow"),
   volumeImageLightboxTitle: byId("volumeImageLightboxTitle"),
   volumeImageLightboxCaption: byId("volumeImageLightboxCaption"),
+  volumeImageLightboxContent: byId("volumeImageLightboxContent"),
   volumeImageLightboxViewport: byId("volumeImageLightboxViewport"),
   volumeImageLightboxImage: byId("volumeImageLightboxImage"),
+  volumeImageLightboxLegend: byId("volumeImageLightboxLegend"),
   volumeImageLightboxZoomIn: byId("volumeImageLightboxZoomIn"),
   volumeImageLightboxZoomOut: byId("volumeImageLightboxZoomOut"),
   volumeImageLightboxReset: byId("volumeImageLightboxReset"),
@@ -944,6 +948,21 @@ function bindEvents() {
       trigger.dataset.volumeLightboxCaption || "",
       trigger.dataset.volumeLightboxSrc || "",
       trigger.dataset.volumeLightboxAlt || trigger.dataset.volumeLightboxTitle || "Reference image"
+    );
+  });
+  els.volumeTrendBody?.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-volume-lightbox-src]");
+    if (!trigger) {
+      return;
+    }
+    openVolumeImageLightbox(
+      trigger.dataset.volumeLightboxEyebrow || "Trend analysis map",
+      trigger.dataset.volumeLightboxTitle || "Trend analysis",
+      trigger.dataset.volumeLightboxCaption || "",
+      trigger.dataset.volumeLightboxSrc || "",
+      trigger.dataset.volumeLightboxAlt || trigger.dataset.volumeLightboxTitle || "Trend analysis map",
+      trigger.dataset.volumeLightboxLegend === "trend-map" ? state.volumeLightboxLegendItems : [],
+      Number(trigger.dataset.volumeLightboxRotation || 0)
     );
   });
   els.volumeImageLightboxClose?.addEventListener("click", closeVolumeImageLightbox);
@@ -3550,12 +3569,20 @@ async function renderVolume() {
   const setTrendState = (data) => {
     els.volumeTrendPanel.classList.toggle("is-hidden", !data);
     if (!data) {
+      state.volumeLightboxLegendItems = [];
       els.volumeTrendBody.innerHTML = "";
       return;
     }
 
     const pairSummaries = trendPairSummaries(data.stats);
-    const topClass = sortedTrendClasses(data.stats.trend_classes || [])[0] || null;
+    const trendClasses = sortedTrendClasses(data.stats.trend_classes || []);
+    const topClass = trendClasses[0] || null;
+    state.volumeLightboxLegendItems = trendClasses.map((item) => ({
+      label: item.label,
+      description: trendClassExplanation(item.key),
+      meta: `${formatSquareMetres(item.area_m2)} | ${fixed(item.percent_of_classified_area, 1)}% of the classified area`,
+      color: `rgb(${item.color_rgba.slice(0, 3).join(",")})`
+    }));
     els.volumeTrendBody.innerHTML = `
       <div class="volume-trend-top">
         <div class="volume-trend-callout">
@@ -3593,14 +3620,26 @@ async function renderVolume() {
           `).join("")}
         </div>
       </div>
-      <figure class="volume-trend-map volume-trend-map--rotated">
-        <div class="volume-trend-map__stage">
-          <img src="${escapeAttr(data.imageSrc)}" alt="Trend classification map for ${escapeAttr(data.manifest.area_label || sandboxArea.label)} across the available survey rounds">
-        </div>
+      <figure class="volume-trend-map" data-area-id="${escapeAttr(sandboxArea.id)}">
+        <button
+          class="volume-trend-map__button"
+          type="button"
+          data-volume-lightbox-src="${escapeAttr(data.imageSrc)}"
+          data-volume-lightbox-eyebrow="Trend analysis map"
+          data-volume-lightbox-title="${escapeAttr(`${sandboxArea.label} trend analysis map`)}"
+          data-volume-lightbox-caption="Expanded trend view with the class summary shown alongside it. Use the zoom controls to inspect the map in more detail."
+          data-volume-lightbox-alt="Trend classification map for ${escapeAttr(data.manifest.area_label || sandboxArea.label)} across the available survey rounds"
+          data-volume-lightbox-legend="trend-map"
+          data-volume-lightbox-rotation="90"
+        >
+          <div class="volume-trend-map__stage">
+            <img src="${escapeAttr(data.imageSrc)}" alt="Trend classification map for ${escapeAttr(data.manifest.area_label || sandboxArea.label)} across the available survey rounds">
+          </div>
+        </button>
         <figcaption class="muted">Use this map as the long-term view. The 3D viewer focuses on the latest comparison, while this shows the broader multi-round pattern in one place.</figcaption>
       </figure>
       <div class="volume-trend-classes">
-        ${sortedTrendClasses(data.stats.trend_classes || []).map((item) => `
+        ${trendClasses.map((item) => `
           <article class="volume-trend-class-card">
             <div class="volume-trend-class-card__head">
               <span class="volume-trend-swatch" style="background: rgb(${item.color_rgba.slice(0, 3).join(",")});"></span>
@@ -7301,7 +7340,7 @@ function closeSectionInsightOverlay() {
   els.sectionInsightOverlay.setAttribute("aria-hidden", "true");
 }
 
-function openVolumeImageLightbox(eyebrow, title, caption, src, alt) {
+function openVolumeImageLightbox(eyebrow, title, caption, src, alt, legendItems = [], rotation = 0) {
   if (!src || !els.volumeImageLightbox) {
     return;
   }
@@ -7310,6 +7349,9 @@ function openVolumeImageLightbox(eyebrow, title, caption, src, alt) {
   els.volumeImageLightboxCaption.textContent = caption;
   els.volumeImageLightboxImage.src = src;
   els.volumeImageLightboxImage.alt = alt;
+  state.volumeLightboxRotation = rotation;
+  renderVolumeImageLightboxLegend(legendItems);
+  els.volumeImageLightboxContent?.classList.toggle("has-legend", Boolean(legendItems.length));
   els.volumeImageLightbox.classList.remove("hidden");
   els.volumeImageLightbox.setAttribute("aria-hidden", "false");
   document.body.classList.add("volume-lightbox-open");
@@ -7325,8 +7367,11 @@ function closeVolumeImageLightbox() {
   els.volumeImageLightbox.classList.add("hidden");
   els.volumeImageLightbox.setAttribute("aria-hidden", "true");
   els.volumeImageLightboxImage.removeAttribute("src");
+  renderVolumeImageLightboxLegend([]);
+  els.volumeImageLightboxContent?.classList.remove("has-legend");
   document.body.classList.remove("volume-lightbox-open");
   state.volumeLightboxZoom = 1;
+  state.volumeLightboxRotation = 0;
 }
 
 function setVolumeImageLightboxZoom(value) {
@@ -7335,8 +7380,41 @@ function setVolumeImageLightboxZoom(value) {
   if (!els.volumeImageLightboxImage) {
     return;
   }
-  els.volumeImageLightboxImage.style.width = `${nextZoom * 100}%`;
-  els.volumeImageLightboxImage.style.maxWidth = "none";
+  els.volumeImageLightboxImage.style.width = "100%";
+  els.volumeImageLightboxImage.style.maxWidth = "100%";
+  els.volumeImageLightboxImage.style.maxHeight = "100%";
+  els.volumeImageLightboxImage.style.transform = `${state.volumeLightboxRotation ? `rotate(${state.volumeLightboxRotation}deg) ` : ""}scale(${nextZoom})`.trim();
+  els.volumeImageLightboxImage.style.transformOrigin = "center center";
+}
+
+function renderVolumeImageLightboxLegend(items = []) {
+  if (!els.volumeImageLightboxLegend) {
+    return;
+  }
+  if (!items.length) {
+    els.volumeImageLightboxLegend.classList.add("is-hidden");
+    els.volumeImageLightboxLegend.innerHTML = "";
+    return;
+  }
+  els.volumeImageLightboxLegend.classList.remove("is-hidden");
+  els.volumeImageLightboxLegend.innerHTML = `
+    <div class="volume-image-lightbox__legend-head">
+      <p class="eyebrow">Trend summary</p>
+      <h4>Abbreviated class table</h4>
+    </div>
+    <div class="volume-image-lightbox__legend-list">
+      ${items.map((item) => `
+        <article class="volume-image-lightbox__legend-item">
+          <div class="volume-image-lightbox__legend-title">
+            <span class="volume-trend-swatch" style="background:${escapeAttr(item.color)};"></span>
+            <strong>${escapeHtml(item.label)}</strong>
+          </div>
+          <p>${escapeHtml(item.description)}</p>
+          <p class="muted">${escapeHtml(item.meta)}</p>
+        </article>
+      `).join("")}
+    </div>
+  `;
 }
 
 function fixed(value, digits) {
