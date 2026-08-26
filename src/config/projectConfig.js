@@ -1,25 +1,25 @@
 export const projectConfig = {
   productName: "FutureScaping Coastal Change Demo",
   branding: {
-    overviewHeroImagePath: "./survey-data/coastal-change-demo/2026-07-15/area8/ortho.png",
+    overviewHeroImagePath: "./assets/area8-hero-demo.png",
     overviewHeroImagePathBySurvey: {
-      "2026-03-22": "./assets/area8-hero-2026-04-18.png",
-      "2026-04-18": "./assets/area8-hero-2026-04-18.png",
-      "2026-06-16": "./assets/area8-hero-2026-06-16.png",
-      "2026-07-15": "./survey-data/coastal-change-demo/2026-07-15/area8/ortho.png"
+      "2026-03-22": "./assets/area8-hero-demo.png",
+      "2026-04-18": "./assets/area8-hero-demo.png",
+      "2026-06-16": "./assets/area8-hero-demo.png",
+      "2026-07-15": "./assets/area8-hero-demo.png"
     },
     areaHeroImagesBySurvey: {
       "2026-03-22": {
-        area8: "./assets/area8-hero-2026-04-18.png"
+        area8: "./assets/area8-hero-demo.png"
       },
       "2026-04-18": {
-        area8: "./assets/area8-hero-2026-04-18.png"
+        area8: "./assets/area8-hero-demo.png"
       },
       "2026-06-16": {
-        area8: "./assets/area8-hero-2026-06-16.png"
+        area8: "./assets/area8-hero-demo.png"
       },
       "2026-07-15": {
-        area8: "./survey-data/coastal-change-demo/2026-07-15/area8/ortho.png"
+        area8: "./assets/area8-hero-demo.png"
       }
     },
     areaHeroArtDirectionBySurvey: {
