@@ -33,7 +33,10 @@
       }
 
       .login-shell {
-        width: min(460px, 100%);
+        width: min(980px, 100%);
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+        gap: 24px;
         padding: 28px;
         border-radius: 26px;
         border: 1px solid var(--line);
@@ -41,6 +44,22 @@
           radial-gradient(circle at top right, rgba(99, 200, 255, 0.12), transparent 28%),
           linear-gradient(180deg, rgba(20, 35, 60, 0.98), rgba(10, 19, 35, 0.98));
         box-shadow: 0 28px 70px rgba(0, 0, 0, 0.35);
+      }
+
+      .login-intro {
+        display: grid;
+        gap: 18px;
+        align-content: start;
+        padding: 6px 4px 6px 2px;
+      }
+
+      .login-card {
+        display: grid;
+        gap: 12px;
+        padding: 18px 20px;
+        border-radius: 20px;
+        border: 1px solid rgba(132, 176, 245, 0.14);
+        background: rgba(255, 255, 255, 0.03);
       }
 
       h1 {
@@ -53,6 +72,22 @@
         margin: 0;
         color: var(--muted);
         line-height: 1.6;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      li + li {
+        margin-top: 6px;
+      }
+
+      .login-panel {
+        display: grid;
+        align-content: start;
       }
 
       form {
@@ -111,28 +146,58 @@
         margin-top: 18px;
         font-size: 0.88rem;
       }
+
+      @media (max-width: 860px) {
+        .login-shell {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
     <main class="login-shell">
-      <p>Secure Access</p>
-      <h1>FutureScaping Coastal Change Demo</h1>
-      <p>Enter the username and password you have been given to open the monitoring report.</p>
+      <section class="login-intro">
+        <div>
+          <p>Secure Access</p>
+          <h1>FutureScaping Coastal Change Demo</h1>
+          <p>This demo shows how repeat survey data can be brought together into one monitoring view so change can be checked visually, measured, and explained clearly.</p>
+        </div>
 
-      <form id="loginForm">
-        <label>
-          Username
-          <input id="username" name="username" type="text" autocomplete="username" required>
-        </label>
-        <label>
-          Password
-          <input id="password" name="password" type="password" autocomplete="current-password" required>
-        </label>
-        <button type="submit">Open Report</button>
-      </form>
+        <article class="login-card">
+          <p><strong>What this demo confirms</strong></p>
+          <ul>
+            <li><strong>Compare</strong> shows the visual before-and-after picture using imagery and elevation review.</li>
+            <li><strong>Volume Change</strong> shows measured gain and loss across the monitored area.</li>
+            <li><strong>Sections</strong> show fixed profile lines so height can be checked along the same route through time.</li>
+          </ul>
+        </article>
 
-      <div id="status" class="status" aria-live="polite"></div>
-      <p class="help">Temporary logins can expire automatically. If your access stops working, ask FutureScaping for a fresh login.</p>
+        <article class="login-card">
+          <p><strong>Wider evidence</strong></p>
+          <p>This approach is not limited to FutureScaping survey outputs. Other datasets can be brought in alongside them, including hydrology surveys and related third-party information, to help build a fuller overall picture.</p>
+        </article>
+      </section>
+
+      <section class="login-panel">
+        <p>Secure Access</p>
+        <h1>Open Monitoring Report</h1>
+        <p>Enter the username and password you have been given to open the monitoring report.</p>
+
+        <form id="loginForm">
+          <label>
+            Username
+            <input id="username" name="username" type="text" autocomplete="username" required>
+          </label>
+          <label>
+            Password
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit">Open Report</button>
+        </form>
+
+        <div id="status" class="status" aria-live="polite"></div>
+        <p class="help">Temporary logins can expire automatically. If your access stops working, ask FutureScaping for a fresh login.</p>
+      </section>
     </main>
 
     <script>
