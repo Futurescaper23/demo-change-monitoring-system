@@ -511,6 +511,7 @@ async function handleSiteAuthLoginRequest(request, response) {
         sendJson(response, 401, { error: "Incorrect username or password." });
         return;
       }
+      recordAccessUserLogin(users, matched);
       authUser = {
         id: matched.id,
         username: matched.username,
@@ -741,8 +742,17 @@ function sanitiseAccessUsers(users) {
       expiresAt: user.expiresAt || null,
       createdAt: user.createdAt || null,
       updatedAt: user.updatedAt || null,
+      lastLoginAt: user.lastLoginAt || null,
+      loginCount: Number(user.loginCount || 0),
       expired: Boolean(user.expiresAt && Date.parse(user.expiresAt) <= Date.now())
     }));
+}
+
+function recordAccessUserLogin(users, user) {
+  user.lastLoginAt = new Date().toISOString();
+  user.loginCount = Number(user.loginCount || 0) + 1;
+  user.updatedAt = new Date().toISOString();
+  saveAccessUsers(users);
 }
 
 function hashPassword(password) {

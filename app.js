@@ -6893,12 +6893,14 @@ function renderAccessUsersAdmin() {
   const activeUsers = users.filter((item) => item.active && !item.expired);
   const expiringSoon = activeUsers.filter((item) => item.expiresAt && (Date.parse(item.expiresAt) - Date.now()) <= (1000 * 60 * 60 * 24 * 7));
   const expiredUsers = users.filter((item) => item.expired);
+  const usedUsers = users.filter((item) => Number(item.loginCount || 0) > 0);
+  const neverUsedUsers = users.filter((item) => !Number(item.loginCount || 0));
 
   els.accessUsersSummary.innerHTML = [
     metric("Active logins", String(activeUsers.length), "Can still open the report"),
-    metric("Expiring within 7 days", String(expiringSoon.length), "Worth checking before they lock out"),
-    metric("Expired logins", String(expiredUsers.length), "No longer usable"),
-    metric("Total saved", String(users.length), "Permanent and temporary logins")
+    metric("Used at least once", String(usedUsers.length), "People who have actually signed in"),
+    metric("Never used", String(neverUsedUsers.length), "Sent out but not opened yet"),
+    metric("Expired logins", String(expiredUsers.length), "No longer usable")
   ].join("");
 
   if (!users.length) {
@@ -6915,6 +6917,9 @@ function renderAccessUsersAdmin() {
     const expiresDisplay = user.expiresAt
       ? new Date(user.expiresAt).toLocaleString("en-GB")
       : "No expiry";
+    const lastLoginDisplay = user.lastLoginAt
+      ? new Date(user.lastLoginAt).toLocaleString("en-GB")
+      : "Not used yet";
     const statusLabel = user.expired
       ? "Expired"
       : (user.active ? "Active" : "Disabled");
@@ -6931,6 +6936,10 @@ function renderAccessUsersAdmin() {
           <label>Expires at<input type="datetime-local" data-access-field="expiresAt" value="${escapeAttr(datetimeLocalValue(user.expiresAt))}"></label>
           <label class="admin-span-2">Notes<textarea data-access-field="notes" placeholder="Notes for this login">${escapeHtml(user.notes || "")}</textarea></label>
           <label><input type="checkbox" data-access-field="active" ${user.active ? "checked" : ""}> Active</label>
+        </div>
+        <div class="admin-board-meta">
+          <span class="chip">Logins: ${escapeHtml(String(user.loginCount || 0))}</span>
+          <span class="chip">Last used: ${escapeHtml(lastLoginDisplay)}</span>
         </div>
         <p class="muted">Current expiry: ${escapeHtml(expiresDisplay)}</p>
         <div class="admin-actions">

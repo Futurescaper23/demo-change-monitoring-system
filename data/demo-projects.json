@@ -169,7 +169,7 @@
               "previewLabel": "Area 8 July Change Review",
               "previewBaselineCaption": "Plan-view height change surface for Area 8 between the June and July surveys across the current monitored setup.",
               "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 8 June-to-July comparison.",
-              "viewerEmbedUrl": "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1",
+              "viewerEmbedUrl": "https://area8.vercel.app/",
               "viewerTitle": "Area 8 3D Change Viewer",
               "viewerSummary": "Interactive terrain preview for Area 8 centred on the June-to-July comparison, with the other available survey-pair references now sitting alongside it in the same review flow.",
               "viewerStats": {
