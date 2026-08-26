@@ -5416,10 +5416,10 @@ function trendPairSummaries(stats) {
 }
 
 async function loadSandboxReferenceMaps(projectId, areaId) {
-  const cards = await Promise.all(SANDBOX_REFERENCE_PAIRS.flatMap((item) => {
+  const groupedCards = await Promise.all(SANDBOX_REFERENCE_PAIRS.map(async (item) => {
     const heightPath = surveyAssetPath(projectId, "2026-07-15", areaId, `${areaId}_${item.pair}_height_change_analysis.png`);
     const classPath = surveyAssetPath(projectId, "2026-07-15", areaId, `${areaId}_${item.pair}_gain_loss_classification.png`);
-    return [
+    const [heightCard, classCard] = await Promise.all([
       resolveExistingAsset([heightPath]).then((src) => src ? {
         eyebrow: "Height change analysis",
         title: item.title,
@@ -5438,9 +5438,13 @@ async function loadSandboxReferenceMaps(projectId, areaId) {
         alt: `${areaId} ${item.title} gain and loss classification`,
         caption: `${item.title} simplified class map for the Area 8 July package. This is the flatter client-facing read of the same comparison.`
       } : null)
-    ];
+    ]);
+    return { heightCard, classCard };
   }));
-  return cards.filter(Boolean);
+  return [
+    ...groupedCards.map((item) => item.heightCard).filter(Boolean),
+    ...groupedCards.map((item) => item.classCard).filter(Boolean)
+  ];
 }
 
 function renderVolumeReferenceGallery(cards, options = {}) {

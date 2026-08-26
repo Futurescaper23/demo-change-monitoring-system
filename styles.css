@@ -3201,7 +3201,7 @@ textarea {
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(120, 168, 245, 0.16);
-  background: linear-gradient(180deg, rgba(7, 18, 34, 0.98), rgba(10, 22, 40, 0.98));
+  background: linear-gradient(180deg, rgba(226, 232, 240, 0.98), rgba(205, 214, 226, 0.98));
   display: grid;
   place-items: center;
 }
@@ -3589,7 +3589,7 @@ textarea {
   place-items: center;
   border-radius: 18px;
   border: 1px solid rgba(124, 170, 245, 0.16);
-  background: linear-gradient(180deg, rgba(5, 15, 28, 0.98), rgba(8, 19, 35, 0.98));
+  background: linear-gradient(180deg, rgba(226, 232, 240, 0.98), rgba(205, 214, 226, 0.98));
   padding: 14px;
 }
 
