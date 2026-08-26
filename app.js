@@ -2088,8 +2088,15 @@ const OVERVIEW_GLANCE_BY_SURVEY = {
     ["Survey dates", "16-17 June 2026"],
     ["Low tide reference", "13:22 Day 1 (provisional) | 14:10 Day 2 (provisional)"],
     ["Images captured", "6,405 photos"],
-    ["Air time overall", "321.22 minutes"],
-    ["Operational result", "Completed in two days"]
+    ["Air time overall", "321.22 minutes"]
+  ],
+  "2026-07-15": [
+    ["High tide reference", "06:48 Day 1 - 7.23 m | 07:37 Day 2 - 7.32 m"],
+    ["Total mapped area", "7.25 km2"],
+    ["Survey dates", "15-16 July 2026"],
+    ["Low tide reference", "13:13 Day 1 - 0.86 m | 14:00 Day 2 - 0.75 m"],
+    ["Images captured", "6,489 photos"],
+    ["Air time overall", "322.57 minutes"]
   ]
 };
 
