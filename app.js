@@ -3630,7 +3630,7 @@ async function renderVolume() {
           data-volume-lightbox-caption="Expanded trend view with the class summary shown alongside it. Use the zoom controls to inspect the map in more detail."
           data-volume-lightbox-alt="Trend classification map for ${escapeAttr(data.manifest.area_label || sandboxArea.label)} across the available survey rounds"
           data-volume-lightbox-legend="trend-map"
-          data-volume-lightbox-rotation="90"
+          data-volume-lightbox-rotation="0"
         >
           <div class="volume-trend-map__stage">
             <img src="${escapeAttr(data.imageSrc)}" alt="Trend classification map for ${escapeAttr(data.manifest.area_label || sandboxArea.label)} across the available survey rounds">
