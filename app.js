@@ -153,24 +153,24 @@ const SECTION_PROFILE_COLORS = [
 ];
 
 const DEFAULT_SECTION_CHART_DISPLAY_BY_PROJECT = {
-  "padstow-estuary": {
+  "coastal-change-demo": {
     maxDisplayHeight: 3,
     showClippedOverlay: true
   }
 };
 
 const SECTION_CHART_DISPLAY_OVERRIDES = {
-  "padstow-estuary:area8:A8-01": {
+  "coastal-change-demo:area8:A8-01": {
     minDisplayHeight: -2,
     maxDisplayHeight: 4,
     showClippedOverlay: true
   },
-  "padstow-estuary:area8:A8-02": {
+  "coastal-change-demo:area8:A8-02": {
     minDisplayHeight: -2,
     maxDisplayHeight: 4,
     showClippedOverlay: true
   },
-  "padstow-estuary:area8:A8-03": {
+  "coastal-change-demo:area8:A8-03": {
     minDisplayHeight: -2,
     maxDisplayHeight: 4,
     showClippedOverlay: true
@@ -5087,13 +5087,26 @@ function sectionMetrics(rows, area, survey, section) {
       { label: "Survey timing", value: survey.shortDate, subtext: area.launchOffset }
     ];
   }
-  const minY = Math.min(...rows.map((row) => row.height));
-  const maxY = Math.max(...rows.map((row) => row.height));
+  const displaySettings = sectionChartDisplaySettings(section);
+  const rawMinY = Math.min(...rows.map((row) => row.height));
+  const rawMaxY = Math.max(...rows.map((row) => row.height));
+  const minY = Number.isFinite(displaySettings?.minDisplayHeight)
+    ? Math.max(rawMinY, displaySettings.minDisplayHeight)
+    : rawMinY;
+  const maxY = Number.isFinite(displaySettings?.maxDisplayHeight)
+    ? Math.min(rawMaxY, displaySettings.maxDisplayHeight)
+    : rawMaxY;
   const minX = Math.min(...rows.map((row) => row.distance));
   const maxX = Math.max(...rows.map((row) => row.distance));
   return [
     { label: "Section", value: section.label, subtext: `${rows.length} sampled profile points` },
-    { label: "Ground range", value: `${fixed(minY, 2)} m to ${fixed(maxY, 2)} m`, subtext: "Lowest to highest sampled ground" },
+    {
+      label: "Ground range",
+      value: `${fixed(minY, 2)} m to ${fixed(maxY, 2)} m`,
+      subtext: (Number.isFinite(displaySettings?.minDisplayHeight) || Number.isFinite(displaySettings?.maxDisplayHeight))
+        ? "Display range used for this section view"
+        : "Lowest to highest sampled ground"
+    },
     { label: "Distance covered", value: `${fixed(maxX - minX, 1)} m`, subtext: "Length of this fixed section line" },
     { label: "Survey timing", value: survey.shortDate, subtext: area.launchOffset }
   ];
