@@ -1980,6 +1980,63 @@ const SURVEY_SPECIFIC_OVERVIEW = {
         ]
       }
     ]
+  },
+  "2026-07-15": {
+    heroTitle: "What Survey Round 4 added to the monitoring record",
+    heroText: "This survey-specific view captures what the July repeat showed in the field, what changed operationally, and anything that needs to be carried forward into the next survey round.",
+    storyTitle: "Survey Round 4 Learnings",
+    contentsSubtext: "Use this view to record the key field notes, route lessons, survey conditions, and follow-up actions from the 15-16 July 2026 survey.",
+    glance: [
+      ["High tide reference", "06:48 Day 1 - 7.23 m | 07:37 Day 2 - 7.32 m"],
+      ["Total mapped area", "7.25 km2"],
+      ["Survey dates", "15-16 July 2026"],
+      ["Low tide reference", "13:13 Day 1 - 0.86 m | 14:00 Day 2 - 0.75 m"],
+      ["Images captured", "6,489 photos"],
+      ["Air time overall", "322.57 minutes"]
+    ],
+    story: [
+      {
+        id: "round4-overview",
+        title: "What This Survey Round Covered",
+        paragraphs: [
+          "Survey Round 4 was designed to follow the route logic proven in Survey Round 3. By this point, the team had a much clearer understanding of how the estuary should be scanned if the aim is to maximise exposed ground rather than simply work through the areas in a convenient travel order.",
+          "The route again started in the outer estuary, where Doom Bar and the more seaward sand surfaces appear first, and then worked inland towards Wadebridge where the estuary tends to stay exposed for longer after low tide. In practical terms, that meant the round was trying to give every area the strongest possible exposure window rather than leaving a few sections feeling rushed or still too full of water."
+        ]
+      },
+      {
+        id: "round4-conditions",
+        title: "Survey Conditions",
+        paragraphs: [
+          "Conditions across both survey days were very good, although exceptionally hot. Temperatures were around 30C at various points on both days, so the work was carried out in bright, hot weather with sun cream and light clothing very much needed.",
+          "From a surveying point of view, those conditions were a positive overall because the route could be followed cleanly and the team was not fighting poor weather while trying to hold the low-tide windows."
+        ]
+      },
+      {
+        id: "round4-what-worked",
+        title: "What Worked Well",
+        paragraphs: [
+          "The biggest success in Round 4 was that the updated route logic worked again. Starting in the outer estuary and then finishing further inland is now proving to be the right pattern for this monitoring programme, because it gives the lower estuary the earlier exposure it needs while still leaving time to capture the upper estuary before it refills.",
+          "That matters because some areas in the first two survey rounds felt slightly neglected, with the water still too high to reveal exactly what was needed. Round 4 felt much stronger in that respect, with the overall sequence giving better exposure across the programme.",
+          "The round also added more useful access knowledge on the ground. In Area 7 especially, following the water edge turned out to be a much firmer and more reliable way to get out onto the sandbar than trying to cut back across the softer ground further inland."
+        ]
+      },
+      {
+        id: "round4-what-did-not",
+        title: "What Did Not Work So Well",
+        paragraphs: [
+          "The main difficulty was not the route itself but the ground conditions underfoot once out on the bars. Soft sand remained a risk in places, and there was another near-miss where it became very easy to sink and get stuck while working out in the middle of the sandbar.",
+          "That is less a sign that the survey logic failed and more a reminder that even with the route now working well, access and exit lines across the estuary still need to be judged carefully in the field."
+        ]
+      },
+      {
+        id: "round4-next-time",
+        title: "What To Carry Forward",
+        paragraphs: [
+          "The main lesson to carry forward is that the Round 3 route logic should remain the standard pattern for future scans. Whether the calendar days swap around slightly is less important than keeping the same tide-led sequence of outer estuary first and Wadebridge later.",
+          "The other practical lesson is to keep refining the safest and firmest walking lines across the sandbars. The firmer route found by following the water edge in Area 7 is exactly the kind of local access knowledge that will make future rounds smoother and safer."
+        ]
+      }
+    ]
   }
 };
 
