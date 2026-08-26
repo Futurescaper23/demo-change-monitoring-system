@@ -578,7 +578,9 @@ h1 {
   border: 0;
   border-radius: 0;
   box-shadow: none;
-  background: #10203b;
+  background:
+    radial-gradient(circle at 28% 36%, rgba(45, 86, 150, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(8, 17, 31, 0.24), rgba(8, 17, 31, 0.38));
 }
 
 .shell[data-stage-visual="overview-hero"] .shell-stagebar__image {
@@ -588,8 +590,8 @@ h1 {
 
 .shell[data-stage-visual="overview-hero"] .shell-stagebar__visual-glow {
   background:
-    linear-gradient(90deg, rgba(8, 18, 34, 0.58) 0%, rgba(8, 18, 34, 0.22) 24%, rgba(8, 18, 34, 0.04) 56%, rgba(8, 18, 34, 0.18) 100%),
-    linear-gradient(180deg, rgba(8, 18, 34, 0.04), rgba(8, 18, 34, 0.24));
+    linear-gradient(90deg, rgba(8, 18, 34, 0.24) 0%, rgba(8, 18, 34, 0.08) 24%, rgba(8, 18, 34, 0.02) 56%, rgba(8, 18, 34, 0.08) 100%),
+    linear-gradient(180deg, rgba(8, 18, 34, 0.02), rgba(8, 18, 34, 0.12));
 }
 
 .shell[data-stage-visual="overview-hero"] .shell-stagebar__meta {
