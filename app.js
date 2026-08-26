@@ -73,7 +73,7 @@ import { volumeChangeSettings } from "./src/data/volumeChange.js?v=20260529g";
 
 const VALID_TABS = new Set(projectConfig.navigation.tabs);
 const AREA_ENABLED_TOOLBAR_TABS = new Set(["panorama", "volume", "layers", "sections"]);
-const SURVEY_MODEL_TABS = new Set(["areas", "panorama", "volume", "layers", "sections"]);
+const SURVEY_MODEL_TABS = new Set(["overview", "areas", "weather", "panorama", "volume", "layers", "sections"]);
 const sandboxTrendPaths = {
   manifest: "./data/area8-trend-manifest.json",
   stats: "./data/area8-trend-stats.json",
@@ -1296,7 +1296,13 @@ function configuredOverviewHeroImage(surveyId) {
 }
 
 function configuredSurveyModelUrl(surveyId) {
-  return String(projectConfig.branding?.niraModelsBySurvey?.[surveyId] || "").trim();
+  const directMatch = projectConfig.branding?.niraModelsBySurvey?.[surveyId];
+  if (String(directMatch || "").trim()) {
+    return String(directMatch).trim();
+  }
+  const fallbackMatch = Object.values(projectConfig.branding?.niraModelsBySurvey || {})
+    .find((value) => String(value || "").trim());
+  return String(fallbackMatch || "").trim();
 }
 
 function renderShellStageAction(survey) {
@@ -1319,15 +1325,15 @@ function renderShellStageAction(survey) {
         target="_blank"
         rel="noopener noreferrer"
       >
-        <span class="shell-stage-action-link__label">Open 3D Model</span>
-        <span class="shell-stage-action-link__sub">${escapeHtml(`Open the DJI Terra model for ${survey.shortDate || survey.label} in Nira.`)}</span>
+        <span class="shell-stage-action-link__label">View 3D Model Here</span>
+        <span class="shell-stage-action-link__sub">${escapeHtml(`Open the Area 8 model for ${survey.shortDate || survey.label}.`)}</span>
       </a>
     `;
   } else {
     els.shellStageAction.innerHTML = `
       <div class="shell-stage-action-link shell-stage-action-link--disabled" aria-disabled="true">
-        <span class="shell-stage-action-link__label">3D Model Coming Soon</span>
-        <span class="shell-stage-action-link__sub">${escapeHtml(`Add the Nira link for ${survey.shortDate || survey.label} in project config to enable this button.`)}</span>
+        <span class="shell-stage-action-link__label">3D Model Unavailable</span>
+        <span class="shell-stage-action-link__sub">${escapeHtml(`No 3D model link is currently available for ${survey.shortDate || survey.label}.`)}</span>
       </div>
     `;
   }

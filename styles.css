@@ -110,16 +110,17 @@ body { overflow-x: hidden; }
 .shell-stagebar__brand {
   display: none;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .shell-stagebar__brandword {
   display: grid;
+  align-items: end;
 }
 
 .shell-stagebar__brandname {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: rgba(237, 244, 255, 0.96);
@@ -328,27 +329,11 @@ body { overflow-x: hidden; }
   gap: 10px;
 }
 
-.shell-brand__mark {
-  width: 44px;
-  display: grid;
-  gap: 4px;
-}
-
-.shell-brand__mark span {
+.shell-brand__logo {
+  width: min(100%, 290px);
+  max-width: 290px;
+  height: auto;
   display: block;
-  height: 8px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #4ed2ff 0%, #4b7fff 55%, #a78bfa 100%);
-  box-shadow: 0 0 18px rgba(78, 210, 255, 0.35);
-}
-
-.shell-brand__mark span:nth-child(2) {
-  width: 34px;
-  justify-self: end;
-}
-
-.shell-brand__mark span:nth-child(3) {
-  width: 26px;
 }
 
 .shell-brand__wordmark {
