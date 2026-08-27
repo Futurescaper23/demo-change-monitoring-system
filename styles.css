@@ -516,9 +516,9 @@ h1 {
 
 .shell[data-stage-visual="overview-hero"] .shell-stagebar__copy {
   position: absolute;
-  inset: 34px auto auto 42px;
+  inset: 34px auto auto 56px;
   z-index: 2;
-  max-width: min(300px, calc(100% - 84px));
+  max-width: min(420px, calc(100% - 112px));
   display: grid;
   gap: 12px;
 }
@@ -551,7 +551,7 @@ h1 {
 }
 
 .shell[data-stage-visual="overview-hero"] .shell-stagebar__copy .muted {
-  max-width: 16ch;
+  max-width: 31ch;
   font-size: 0.84rem;
   margin-top: 0;
   color: rgba(224, 234, 250, 0.82);
@@ -3784,8 +3784,8 @@ a { color: var(--accent); }
   }
 
   .shell[data-stage-visual="overview-hero"] .shell-stagebar__copy {
-    inset: 24px auto 28px 28px;
-    max-width: min(250px, calc(100% - 56px));
+    inset: 24px auto 28px 40px;
+    max-width: min(360px, calc(100% - 88px));
   }
 
   .shell[data-stage-visual="overview-hero"] .shell-stagebar__meta {
@@ -3931,7 +3931,7 @@ a { color: var(--accent); }
 
   .shell[data-active-tab="overview"] .shell-stagebar__copy {
     inset: 18px 18px auto 18px;
-    max-width: min(260px, calc(100% - 36px));
+    max-width: min(320px, calc(100% - 36px));
   }
 
   .shell[data-stage-visual="overview-hero"] .shell-stagebar__copy h2 {
@@ -3942,7 +3942,7 @@ a { color: var(--accent); }
   }
 
   .shell[data-stage-visual="overview-hero"] .shell-stagebar__copy .muted {
-    max-width: min(82vw, 320px);
+    max-width: min(82vw, 32ch);
     font-size: 0.98rem;
   }
 
