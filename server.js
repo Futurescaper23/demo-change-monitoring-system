@@ -16,7 +16,11 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const TIDE_LATITUDE = environmentalContext.tide.latitude;
 const TIDE_LONGITUDE = environmentalContext.tide.longitude;
-const ACCESS_USERS_PATH = resolveAccessUsersPath(process.env.ACCESS_USERS_PATH || "./data/access-users.json");
+const REPO_ACCESS_USERS_PATH = path.resolve(__dirname, "./data/access-users.json");
+const ACCESS_USERS_PATH = resolveAccessUsersPath(
+  process.env.ACCESS_USERS_PATH
+  || (fs.existsSync("/var/data") ? "/var/data/access-users.json" : "./data/access-users.json")
+);
 const LOGIN_PAGE_PATH = path.join(__dirname, "login.html");
 const SESSION_COOKIE_NAME = "fsm_session";
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
@@ -715,7 +719,23 @@ function resolveAccessUsersPath(rawPath) {
 function ensureAccessUsersStore() {
   fs.mkdirSync(path.dirname(ACCESS_USERS_PATH), { recursive: true });
   if (!fs.existsSync(ACCESS_USERS_PATH)) {
-    fs.writeFileSync(ACCESS_USERS_PATH, JSON.stringify({ users: [] }, null, 2));
+    const seedUsers = loadSeedAccessUsers();
+    fs.writeFileSync(ACCESS_USERS_PATH, JSON.stringify({ users: seedUsers }, null, 2));
+  }
+}
+
+function loadSeedAccessUsers() {
+  if (ACCESS_USERS_PATH === REPO_ACCESS_USERS_PATH) {
+    return [];
+  }
+  if (!fs.existsSync(REPO_ACCESS_USERS_PATH)) {
+    return [];
+  }
+  try {
+    const payload = JSON.parse(fs.readFileSync(REPO_ACCESS_USERS_PATH, "utf8"));
+    return Array.isArray(payload?.users) ? payload.users : [];
+  } catch {
+    return [];
   }
 }
 
