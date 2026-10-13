@@ -84,12 +84,16 @@ const sandboxTrendPaths = {
 let sandboxTrendCachePromise = null;
 
 const SANDBOX_REFERENCE_PAIRS = [
-  { pair: "A_vs_B", title: "Survey 1 vs Survey 2", badge: "Comparison 1", window: "March to April" },
-  { pair: "A_vs_C", title: "Survey 1 vs Survey 3", badge: "Comparison 2", window: "March to June" },
-  { pair: "A_vs_D", title: "Survey 1 vs Survey 4", badge: "Comparison 3", window: "March to July" },
-  { pair: "B_vs_C", title: "Survey 2 vs Survey 3", badge: "Comparison 4", window: "April to June" },
-  { pair: "B_vs_D", title: "Survey 2 vs Survey 4", badge: "Comparison 5", window: "April to July" },
-  { pair: "C_vs_D", title: "Survey 3 vs Survey 4", badge: "Comparison 6", window: "June to July" }
+  { pair: "A_vs_B", surveyId: "2026-07-15", title: "Survey 1 vs Survey 2", badge: "Comparison 1", window: "March to April" },
+  { pair: "A_vs_C", surveyId: "2026-07-15", title: "Survey 1 vs Survey 3", badge: "Comparison 2", window: "March to June" },
+  { pair: "A_vs_D", surveyId: "2026-07-15", title: "Survey 1 vs Survey 4", badge: "Comparison 3", window: "March to July" },
+  { pair: "A_vs_E", surveyId: "2026-09-10", title: "Survey 1 vs Survey 5", badge: "Comparison 4", window: "March to September" },
+  { pair: "B_vs_C", surveyId: "2026-07-15", title: "Survey 2 vs Survey 3", badge: "Comparison 5", window: "April to June" },
+  { pair: "B_vs_D", surveyId: "2026-07-15", title: "Survey 2 vs Survey 4", badge: "Comparison 6", window: "April to July" },
+  { pair: "B_vs_E", surveyId: "2026-09-10", title: "Survey 2 vs Survey 5", badge: "Comparison 7", window: "April to September" },
+  { pair: "C_vs_D", surveyId: "2026-07-15", title: "Survey 3 vs Survey 4", badge: "Comparison 8", window: "June to July" },
+  { pair: "C_vs_E", surveyId: "2026-09-10", title: "Survey 3 vs Survey 5", badge: "Comparison 9", window: "June to September" },
+  { pair: "D_vs_E", surveyId: "2026-09-10", title: "Survey 4 vs Survey 5", badge: "Comparison 10", window: "July to September" }
 ];
 
   const EXPLICIT_SECTION_IMAGE_TRACKS = {
@@ -2081,6 +2085,46 @@ const SURVEY_SPECIFIC_OVERVIEW = {
         ]
       }
     ]
+  },
+  "2026-09-10": {
+    heroTitle: "What Survey Round 5 added to the monitoring record",
+    heroText: "This survey-specific view brings the September Area 8 repeat into the same demo workflow, including the latest aerial layers, section profiles, trend output, and July-to-September change package.",
+    storyTitle: "Survey Round 5 Learnings",
+    contentsSubtext: "Use this view to review the latest Area 8 capture, its tide context, and the new evidence added to the repeat-survey record.",
+    glance: [
+      ["Survey window", "9-11 Sep 2026"],
+      ["Area 8 capture", "9 Sep 2026"],
+      ["Area 8 flight window", "13:41-14:24 BST"],
+      ["Low tide reference", "11:12 BST - 1.38 m"],
+      ["Latest comparison", "Survey 4 vs Survey 5"],
+      ["Data status", "Imagery, sections, trend, and change maps linked"]
+    ],
+    story: [
+      {
+        id: "round5-area8-window",
+        title: "Area 8 Closed The First Field Day",
+        paragraphs: [
+          "The Area 8 capture used the final two flight records on 9 September, running from about 13:41 to 14:24 BST.",
+          "That placed the work well after the 11:12 low-water reference, using the longer exposure window available in the monitored upper reach."
+        ]
+      },
+      {
+        id: "round5-area8-evidence",
+        title: "The Latest Evidence Is Now Connected",
+        paragraphs: [
+          "The Scan 5 orthomosaic, elevation layer, contours, and section profiles now sit alongside the earlier rounds in the same Area 8 review tools.",
+          "The change page also adds the July-to-September measured comparison and the supporting comparisons that run from earlier surveys through to Survey Round 5."
+        ]
+      },
+      {
+        id: "round5-area8-trend",
+        title: "The Trend View Now Reaches September",
+        paragraphs: [
+          "The refreshed trend layer combines the earlier March-to-July interval with the latest July-to-September interval.",
+          "That makes it possible to distinguish longer-running patterns from changes that appeared mainly in the latest repeat."
+        ]
+      }
+    ]
   }
 };
 
@@ -2116,6 +2160,14 @@ const OVERVIEW_GLANCE_BY_SURVEY = {
     ["Low tide reference", "13:13 Day 1 - 0.86 m | 14:00 Day 2 - 0.75 m"],
     ["Images captured", "6,489 photos"],
     ["Air time overall", "322.57 minutes"]
+  ],
+  "2026-09-10": [
+    ["Survey window", "9-11 Sep 2026"],
+    ["Area 8 capture", "9 Sep 2026"],
+    ["Area 8 flight window", "13:41-14:24 BST"],
+    ["Low tide reference", "11:12 BST - 1.38 m"],
+    ["Latest comparison", "Survey 4 vs Survey 5"],
+    ["Data status", "Imagery, sections, trend, and change maps linked"]
   ]
 };
 
@@ -2908,7 +2960,8 @@ function renderWeather() {
   const project = currentProject();
   const survey = currentSurvey();
   const windowRange = weatherWindowForSurvey(project.surveys, survey.id);
-  const surveyDates = [survey.dateFrom, survey.dateTo]
+  const surveyDateRange = surveyDateKeys(survey);
+  const surveyDates = (surveyDateRange.length ? surveyDateRange : [survey.dateFrom, survey.dateTo])
     .filter(Boolean)
     .filter((value, index, array) => array.indexOf(value) === index);
 
@@ -3658,7 +3711,7 @@ async function renderVolume() {
 
   els.volumeSandboxBanner.innerHTML = `
     <strong>Demo Preview - ${escapeHtml(sandboxArea.overviewCode)}</strong>
-    <p>This demo is now showing the latest Area 8 change-analysis package, including the July comparison figures, supporting flat maps, and the client-facing 3D review link.</p>
+    <p>This demo is now showing the latest Area 8 change-analysis package, including the September Scan 5 comparison figures, supporting flat maps, and the client-facing 3D review link.</p>
   `;
 
   if (!baselineSurvey && !volumeDataset) {
@@ -3773,7 +3826,7 @@ async function renderVolume() {
         }
       ]);
       els.volumeSummary.textContent = `${area.label} is being compared between ${baselineSurvey?.shortDate || baselineLabel} and ${survey.shortDate}. This setup pairs the measured totals with a live 3D viewer and the full supporting comparison-map set so the change is easier to interpret from different angles.`;
-      els.volumeImageSummary.textContent = "The full Area 8 July package is shown here: the height-change maps first, then the simpler gain-and-loss class maps. Click any image to open it full screen and zoom in.";
+      els.volumeImageSummary.textContent = "The full Area 8 comparison package through Scan 5 is shown here: the height-change maps first, then the simpler gain-and-loss class maps. Click any image to open it full screen and zoom in.";
     } else {
       const beforeAfterCards = [];
       if (baselineImageExists) {
@@ -3825,7 +3878,7 @@ async function renderVolume() {
     <div class="volume-explainer">
       <div class="volume-explainer__block">
         <strong>What this page is doing now</strong>
-        <p>This page now combines three layers of evidence for ${escapeHtml(area.label)}: the interactive 3D comparison viewer, the longer-term trend map across all three survey rounds, and the flat reference maps underneath.</p>
+        <p>This page now combines three layers of evidence for ${escapeHtml(area.label)}: the interactive 3D comparison viewer, the longer-term trend map through Survey Round 5, and the flat reference maps underneath.</p>
       </div>
       <div class="volume-explainer__block">
         <strong>How to read it in order</strong>
@@ -5335,10 +5388,11 @@ function currentSurvey() {
 
 function weatherWindowForSurvey(surveys, surveyId) {
   const current = surveys.find((item) => item.id === surveyId) || surveys[0];
+  const explicitWindow = current?.weatherWindow || {};
   const anchor = current?.dateFrom || current?.dateTo || environmentalContext.fallbackSurveyEndDate;
-  const end = current?.dateTo || current?.dateFrom || environmentalContext.fallbackSurveyEndDate;
+  const end = explicitWindow.end || current?.dateTo || current?.dateFrom || environmentalContext.fallbackSurveyEndDate;
   return {
-    start: subtractMonths(anchor, environmentalContext.weatherWindowMonths),
+    start: explicitWindow.start || subtractMonths(anchor, environmentalContext.weatherWindowMonths),
     end
   };
 }
@@ -5417,8 +5471,9 @@ function trendPairSummaries(stats) {
 
 async function loadSandboxReferenceMaps(projectId, areaId) {
   const groupedCards = await Promise.all(SANDBOX_REFERENCE_PAIRS.map(async (item) => {
-    const heightPath = surveyAssetPath(projectId, "2026-07-15", areaId, `${areaId}_${item.pair}_height_change_analysis.png`);
-    const classPath = surveyAssetPath(projectId, "2026-07-15", areaId, `${areaId}_${item.pair}_gain_loss_classification.png`);
+    const heightPath = surveyAssetPath(projectId, item.surveyId, areaId, `${areaId}_${item.pair}_height_change_analysis.png`);
+    const classPath = surveyAssetPath(projectId, item.surveyId, areaId, `${areaId}_${item.pair}_gain_loss_classification.png`);
+    const packageLabel = item.surveyId === "2026-09-10" ? "September Scan 5" : "July";
     const [heightCard, classCard] = await Promise.all([
       resolveExistingAsset([heightPath]).then((src) => src ? {
         eyebrow: "Height change analysis",
@@ -5427,7 +5482,7 @@ async function loadSandboxReferenceMaps(projectId, areaId) {
         label: item.window,
         src,
         alt: `${areaId} ${item.title} height change analysis`,
-        caption: `${item.title} height change map for the Area 8 July package. Use this to see where the later survey sits higher or lower across the measured footprint.`
+        caption: `${item.title} height change map for the Area 8 ${packageLabel} package. Use this to see where the later survey sits higher or lower across the measured footprint.`
       } : null),
       resolveExistingAsset([classPath]).then((src) => src ? {
         eyebrow: "Gain and loss classes",
@@ -5436,7 +5491,7 @@ async function loadSandboxReferenceMaps(projectId, areaId) {
         label: item.window,
         src,
         alt: `${areaId} ${item.title} gain and loss classification`,
-        caption: `${item.title} simplified class map for the Area 8 July package. This is the flatter client-facing read of the same comparison.`
+        caption: `${item.title} simplified class map for the Area 8 ${packageLabel} package. This is the flatter client-facing read of the same comparison.`
       } : null)
     ]);
     return { heightCard, classCard };
@@ -5565,9 +5620,9 @@ function trendHeadline(topClass) {
     case "consistent_erosion":
       return "The main pattern here is steady lowering, so this part of the footprint has mostly kept losing material from one survey to the next.";
     case "accretion_then_erosion":
-      return "The main pattern here is build-up first, then lowering later. In plain English, material gathered earlier in the season, then some of that gain was lost again by June.";
+      return "The main pattern here is build-up first, then lowering later. In plain English, material gathered during the earlier interval, then some of that gain was lost again by the latest survey.";
     case "erosion_then_accretion":
-      return "The main pattern here is lowering first, then recovery later. In plain English, this area dipped earlier on, then built back up by June.";
+      return "The main pattern here is lowering first, then recovery later. In plain English, this area dipped during the earlier interval, then built back up by the latest survey.";
     case "stable":
       return "A large part of this footprint stayed broadly similar across all three rounds, so it did not move enough to count as a meaningful rise or fall.";
     default:
@@ -5588,9 +5643,9 @@ function trendClassExplanation(key) {
     case "stable":
       return "This part stayed broadly the same across the survey set.";
     case "new_latest_accretion":
-      return "This part mainly changed in the latest round, ending up higher by June.";
+      return "This part mainly changed in the latest interval, ending up higher by Survey Round 5.";
     case "new_latest_erosion":
-      return "This part mainly changed in the latest round, ending up lower by June.";
+      return "This part mainly changed in the latest interval, ending up lower by Survey Round 5.";
     case "earlier_accretion_now_stable":
       return "This part built up earlier, then mostly held that newer shape.";
     case "earlier_erosion_now_stable":

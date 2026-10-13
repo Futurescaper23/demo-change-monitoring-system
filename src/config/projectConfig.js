@@ -6,7 +6,8 @@ export const projectConfig = {
       "2026-03-22": "./assets/area8-hero-demo.png",
       "2026-04-18": "./assets/area8-hero-demo.png",
       "2026-06-16": "./assets/area8-hero-demo.png",
-      "2026-07-15": "./assets/area8-hero-demo.png"
+      "2026-07-15": "./assets/area8-hero-demo.png",
+      "2026-09-10": "./assets/area8-hero-demo.png"
     },
     areaHeroImagesBySurvey: {
       "2026-03-22": {
@@ -19,6 +20,9 @@ export const projectConfig = {
         area8: "./assets/area8-hero-demo.png"
       },
       "2026-07-15": {
+        area8: "./assets/area8-hero-demo.png"
+      },
+      "2026-09-10": {
         area8: "./assets/area8-hero-demo.png"
       }
     },
@@ -33,6 +37,9 @@ export const projectConfig = {
         area8: { position: "62% 49%", scale: 0.84, backdropOpacity: 0, backdropBlur: 0, backdropScale: 1.02 }
       },
       "2026-07-15": {
+        area8: { position: "62% 49%", scale: 0.84, backdropOpacity: 0, backdropBlur: 0, backdropScale: 1.02 }
+      },
+      "2026-09-10": {
         area8: { position: "62% 49%", scale: 0.84, backdropOpacity: 0, backdropBlur: 0, backdropScale: 1.02 }
       }
     },
@@ -54,7 +61,8 @@ export const projectConfig = {
       "2026-03-22": "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1",
       "2026-04-18": "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1",
       "2026-06-16": "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1",
-      "2026-07-15": "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1"
+      "2026-07-15": "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1",
+      "2026-09-10": "https://futurescaping.nira.app/a/ckEmXJjpS2q4FpKbWTIj8A/1"
     }
   },
   data: {

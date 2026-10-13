@@ -746,12 +746,42 @@
           "shortDate": "16-17 Jun 2026",
           "dateFrom": "2026-06-16",
           "dateTo": "2026-06-17",
-          "status": "Latest round loaded",
+          "status": "Repeat survey loaded",
           "readiness": "assets linked",
           "assetFolder": "2026-06-16",
           "dataFolder": "2026-06-16",
           "comparisonBaseline": "2026-04-18",
           "notes": "Latest repeat round for longer-range comparison."
+        },
+        {
+          "id": "2026-07-15",
+          "label": "Survey Round 4 - 15 and 16 July 2026",
+          "shortDate": "15-16 Jul 2026",
+          "dateFrom": "2026-07-15",
+          "dateTo": "2026-07-16",
+          "status": "Repeat survey loaded",
+          "readiness": "assets linked",
+          "assetFolder": "2026-07-15",
+          "dataFolder": "2026-07-15",
+          "comparisonBaseline": "2026-06-16",
+          "notes": "Repeat round with the full Scan 4 comparison package."
+        },
+        {
+          "id": "2026-09-10",
+          "label": "Survey Round 5 - 9-11 September 2026",
+          "shortDate": "9-11 Sep 2026",
+          "dateFrom": "2026-09-09",
+          "dateTo": "2026-09-11",
+          "status": "Latest round loaded",
+          "readiness": "Area 8 imagery, sections, and comparisons linked",
+          "assetFolder": "2026-09-10",
+          "dataFolder": "2026-09-10",
+          "comparisonBaseline": "2026-07-15",
+          "weatherWindow": {
+            "start": "2026-08-09",
+            "end": "2026-09-12"
+          },
+          "notes": "Scan 5 Area 8 imagery, DSM, contours, section profiles, and available volumetric comparison maps are linked in the demo."
         }
       ],
       "surveyAreaOverrides": {
@@ -801,32 +831,177 @@
             "weatherNotes": "Day 2, 17 June 2026. Light rain briefly threatened the capture, but conditions stayed workable and never developed into a heavier shower.",
             "surveyNotes": "This later-tide June block shows the same monitored reach under a very different water-state, making it useful for explaining why survey timing matters as much as the imagery itself."
           }
+        },
+        "2026-09-09": {
+          "area8": {
+            "statusLabel": "Later flood tide",
+            "statusTone": "rose",
+            "day": "Day 1",
+            "start": "13:41",
+            "finish": "14:24",
+            "lowTide": "11:12",
+            "lowTideHeight": "1.38 m",
+            "launchOffset": "149 mins after low tide",
+            "midOffset": 171,
+            "estimatedDuration": "",
+            "actualDuration": "40m 51s",
+            "tideWindow": "Later flood tide well after low water",
+            "tideScore": 42,
+            "missionRole": "Closed Day 1 in the monitored upper reach using the final pair of flight records.",
+            "operationalNote": "The two source-file time ranges were 13:41:15-14:05:41 and 14:08:14-14:24:39 BST.",
+            "weatherNotes": "Day 1, Survey Round 5. The low-water reference was 11:12 BST at 1.38 m.",
+            "surveyNotes": "Area 8 used the final two flight records on 9 September 2026. The grouped block ran from about 13:41 to 14:24, placing launch about 149 minutes after low tide and the midpoint about 171 minutes after low tide.",
+            "tags": [
+              "Day 1 Scan 5",
+              "Upper reach",
+              "Later flood tide",
+              "Flight logs grouped"
+            ],
+            "cardNote": "Late Day 1 upper-reach block",
+            "purpose": "Shows the monitored upper reach later after low tide during the first Scan 5 field day."
+          }
         }
       },
       "volumeChangeComparisons": {
         "2026-04-18": {
           "baselineSurveyId": "2026-03-22",
-          "method": "Later survey ground surface reviewed against the earlier survey across a fixed monitored reach.",
-          "cellSize": "Change workflow preview only - quantified zone reporting not yet published in this demo.",
+          "method": "Visual comparison workflow preview for the monitored reach before the full Area 8 measured package was added.",
+          "cellSize": "Preview mode",
           "areas": {
             "area8": {
               "method": "Visual comparison workflow preview for the monitored reach.",
               "cellSize": "Preview mode",
-              "notes": "This demo area is ready for quantified change reporting, but the current client-safe version focuses on the workflow and visual comparison rather than published cubic-metre totals.",
+              "notes": "This earlier repeat survey stays in the demo for context, but the measured Area 8 volumetric reporting is now focused on the July Scan 4 package.",
               "previewMode": ""
             }
           }
         },
         "2026-06-16": {
           "baselineSurveyId": "2026-04-18",
-          "method": "Later survey ground surface reviewed against the previous repeat round across a fixed monitored reach.",
-          "cellSize": "Change workflow preview only - quantified zone reporting not yet published in this demo.",
+          "method": "Visual comparison workflow preview for the monitored reach before the full Area 8 measured package was added.",
+          "cellSize": "Preview mode",
           "areas": {
             "area8": {
               "method": "Visual comparison workflow preview for the monitored reach.",
               "cellSize": "Preview mode",
-              "notes": "This latest survey pair is included to show how the same reach can be revisited over time even before the measured volume outputs are added to the client-safe demo.",
+              "notes": "This June repeat survey remains available for compare and sections, while the measured volume page now showcases the July package.",
               "previewMode": ""
+            }
+          }
+        },
+        "2026-07-15": {
+          "baselineSurveyId": "2026-06-16",
+          "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 8 monitoring zones, with the June-to-July maps shown up front and the wider available survey-pair references kept underneath.",
+          "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m",
+          "areas": {
+            "area8": {
+              "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 8 monitoring zones, with the June-to-July maps shown up front and the wider available survey-pair references kept underneath.",
+              "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m",
+              "notes": "Area 8 now carries its full July comparison package in the monitoring platform, with the June-to-July view used as the lead comparison and the other available survey-pair maps kept in the same area for supporting reference.",
+              "previewMode": "pair",
+              "previewBaselineImage": "area8_C_vs_D_height_change_analysis.png",
+              "previewCurrentImage": "area8_C_vs_D_gain_loss_classification.png",
+              "previewBaselineLabel": "Height change analysis",
+              "previewCurrentLabel": "Gain and loss classification",
+              "previewLabel": "Area 8 July Change Review",
+              "previewBaselineCaption": "Plan-view height change surface for Area 8 between the June and July surveys across the current monitored setup.",
+              "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 8 June-to-July comparison.",
+              "viewerEmbedUrl": "https://area8.vercel.app/",
+              "viewerTitle": "Area 8 3D Change Viewer",
+              "viewerSummary": "Interactive terrain preview for Area 8 centred on the June-to-July comparison, with the other available survey-pair references now sitting alongside it in the same review flow.",
+              "viewerStats": {
+                "analysedArea": "606,347 m2",
+                "matchingCells": "95.7%",
+                "gridSize": "0.10 m",
+                "threshold": "+/-0.05 m"
+              },
+              "polygons": [
+                {
+                  "label": "Monitored zone",
+                  "gainM3": 30469.038796,
+                  "lossM3": 1.594467,
+                  "netM3": 30467.44433,
+                  "confidence": "Measured review",
+                  "summary": "Net accretion across Monitored zone between Survey Round 3 - 16 June 2026 and Survey Round 4 - 15 July 2026.",
+                  "notes": "Area 8 operational monitoring zone."
+                },
+                {
+                  "label": "Central",
+                  "gainM3": 43495.603015,
+                  "lossM3": 1.646537,
+                  "netM3": 43493.956477,
+                  "confidence": "Measured review",
+                  "summary": "Net accretion across Central between Survey Round 3 - 16 June 2026 and Survey Round 4 - 15 July 2026.",
+                  "notes": "Area 8 operational monitoring zone."
+                },
+                {
+                  "label": "Wadebridge",
+                  "gainM3": 6666.863341,
+                  "lossM3": 3388.262514,
+                  "netM3": 3278.600827,
+                  "confidence": "Measured review",
+                  "summary": "Net accretion across Wadebridge between Survey Round 3 - 16 June 2026 and Survey Round 4 - 15 July 2026.",
+                  "notes": "Area 8 operational monitoring zone."
+                }
+              ]
+            }
+          }
+        },
+        "2026-09-10": {
+          "baselineSurveyId": "2026-07-15",
+          "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 8 monitoring zones, with the July-to-September maps shown up front and the wider available survey-pair references kept underneath.",
+          "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m",
+          "areas": {
+            "area8": {
+              "method": "Later survey ground surface compared with the earlier survey inside the fixed Area 8 monitoring zones.",
+              "cellSize": "Survey grid size 0.10 m with a reporting threshold of +/-0.05 m",
+              "notes": "Area 8 now has Scan 5 outputs linked in the demo. The lead preview uses the July-to-September comparison, with the other available E-round map pairs kept alongside it.",
+              "previewMode": "pair",
+              "previewBaselineImage": "area8_D_vs_E_height_change_analysis.png",
+              "previewCurrentImage": "area8_D_vs_E_gain_loss_classification.png",
+              "previewBaselineLabel": "Height change analysis",
+              "previewCurrentLabel": "Gain and loss classification",
+              "previewLabel": "Area 8 Scan 5 Change Review",
+              "previewBaselineCaption": "Plan-view height change surface for Area 8 between the July and September surveys across the current monitored setup.",
+              "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 8 July-to-September comparison.",
+              "viewerEmbedUrl": "https://area8.vercel.app/",
+              "viewerTitle": "Area 8 Scan 5 Change Viewer",
+              "viewerSummary": "Interactive terrain preview for Area 8 centred on the available Scan 5 monitored comparisons, with the exported A/B/C/D-to-E map pairs available as supporting references.",
+              "viewerStats": {
+                "analysedArea": "609,384 m2",
+                "matchingCells": "96.2%",
+                "gridSize": "0.10 m",
+                "threshold": "+/-0.05 m"
+              },
+              "polygons": [
+                {
+                  "label": "Monitored zone",
+                  "gainM3": 19.220632,
+                  "lossM3": 22223.794975,
+                  "netM3": -22204.574344,
+                  "confidence": "Measured review",
+                  "summary": "Net lowering across Monitored zone between Survey Round 4 - 15 July 2026 and Survey Round 5 - 10 September 2026.",
+                  "notes": "Area 8 operational monitoring zone."
+                },
+                {
+                  "label": "Central",
+                  "gainM3": 93.906634,
+                  "lossM3": 24606.511891,
+                  "netM3": -24512.605258,
+                  "confidence": "Measured review",
+                  "summary": "Net lowering across Central between Survey Round 4 - 15 July 2026 and Survey Round 5 - 10 September 2026.",
+                  "notes": "Area 8 operational monitoring zone."
+                },
+                {
+                  "label": "Wadebridge",
+                  "gainM3": 1659.884933,
+                  "lossM3": 7866.212399,
+                  "netM3": -6206.327466,
+                  "confidence": "Measured review",
+                  "summary": "Net lowering across Wadebridge between Survey Round 4 - 15 July 2026 and Survey Round 5 - 10 September 2026.",
+                  "notes": "Area 8 operational monitoring zone."
+                }
+              ]
             }
           }
         }
@@ -856,6 +1031,7 @@
     }
   ]
 }
+
 
 </script>
 
