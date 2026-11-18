@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "check": "node --check app.js && node --check server.js",
-    "test": "node tests/volume-registry.test.mjs && node tests/survey-assets.test.mjs && node tests/invitations.test.mjs"
+    "test": "node tests/volume-registry.test.mjs && node tests/survey-assets.test.mjs && node tests/invitations.test.mjs && node tests/performance-rendering.test.mjs"
   },
   "engines": {
     "node": ">=20"

@@ -195,9 +195,25 @@ http.createServer(async (request, response) => {
     return;
   }
 
-  response.writeHead(200, {
-    "Content-Type": mimeTypes[path.extname(filePath).toLowerCase()] || "application/octet-stream"
-  });
+  const stat = fs.statSync(filePath);
+  const etag = `W/\"${stat.size.toString(16)}-${Math.trunc(stat.mtimeMs).toString(16)}\"`;
+  const headers = {
+    "Content-Type": mimeTypes[path.extname(filePath).toLowerCase()] || "application/octet-stream",
+    "ETag": etag,
+    // Survey imagery remains authenticated and is never eligible for a shared
+    // cache. Conditional private caching avoids re-downloading unchanged maps.
+    "Cache-Control": "private, max-age=0, must-revalidate"
+  };
+  if (request.headers["if-none-match"] === etag) {
+    response.writeHead(304, headers);
+    response.end();
+    return;
+  }
+  response.writeHead(200, headers);
+  if (request.method === "HEAD") {
+    response.end();
+    return;
+  }
   fs.createReadStream(filePath).pipe(response);
 }).listen(port, () => {
   console.log(`FutureScaping monitoring system running at http://localhost:${port}`);
@@ -898,7 +914,11 @@ async function handleInvitationUpdateRequest(request, response, session) {
 }
 
 function serveLoginPage(response) {
-  response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+  response.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control": "no-store",
+    "Referrer-Policy": "no-referrer"
+  });
   fs.createReadStream(LOGIN_PAGE_PATH).pipe(response);
 }
 

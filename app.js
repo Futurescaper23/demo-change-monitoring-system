@@ -14,6 +14,7 @@ import { volumeChangeSettings } from "./src/data/volumeChange.js?v=20260529g";
   primaryLayerKey: projectConfig.defaultState.primaryLayerKey,
   secondaryLayerKey: projectConfig.defaultState.secondaryLayerKey,
   assetStatusCache: new Map(),
+  tabRenderVersions: new Map(),
   primarySurveyId: null,
   secondarySurveyId: null,
   compareMode: "single",
@@ -821,11 +822,7 @@ function bindEvents() {
     state.sectionComparisonSurveyIds = mergeSectionComparisonSurveyIds(defaultSectionComparisonSurveyIds(), state.sectionComparisonSurveyIds);
     resetView();
     renderShellStage();
-    renderOverview();
-    renderWeather();
-    renderLayers();
-    renderSections();
-    renderAdminIfEnabled();
+    renderActiveTab();
     syncUrlState();
   });
 
@@ -1069,9 +1066,6 @@ function bindEvents() {
     const tab = event.target.closest(".tab");
     if (!tab) return;
     activateTab(tab.dataset.tab);
-    if (tab.dataset.tab === "weather") {
-      renderWeather();
-    }
     updateBackToTopVisibility();
   });
 
@@ -1295,15 +1289,47 @@ function renderAll() {
   fillSelect(els.sectionSelect, currentArea().sections.map((section) => [section.id, section.label]), state.sectionId);
   syncAdminVisibility();
   renderShellStage();
-  renderOverview();
-  renderAreas();
-  renderWeather();
-  renderPanorama();
-  renderVolume();
-  renderLayers();
-  renderSections();
-  renderAdminIfEnabled();
-  renderWorkflow();
+  renderActiveTab();
+}
+
+function renderActiveTab() {
+  const renderers = {
+    overview: renderOverview,
+    areas: renderAreas,
+    weather: renderWeather,
+    panorama: renderPanorama,
+    volume: renderVolume,
+    layers: renderLayers,
+    sections: renderSections,
+    admin: () => {
+      renderAdminIfEnabled();
+      // This existing explanatory card belongs to the Admin panel; keep it
+      // populated when that panel is opened without rebuilding it on every
+      // client-facing tab render.
+      if (els.workflowGrid) renderWorkflow();
+    }
+  };
+  renderers[state.activeTab]?.();
+}
+
+function beginTabRender(tabName) {
+  const version = (state.tabRenderVersions.get(tabName) || 0) + 1;
+  state.tabRenderVersions.set(tabName, version);
+  return {
+    tabName,
+    version,
+    surveyId: state.surveyId,
+    areaId: state.areaId,
+    sectionId: state.sectionId
+  };
+}
+
+function isCurrentTabRender(render) {
+  return state.activeTab === render.tabName
+    && state.tabRenderVersions.get(render.tabName) === render.version
+    && state.surveyId === render.surveyId
+    && state.areaId === render.areaId
+    && state.sectionId === render.sectionId;
 }
 
 function renderShellToolbar() {
@@ -2680,6 +2706,7 @@ function renderAreas() {
 }
 
 async function renderLayers() {
+  const render = beginTabRender("layers");
   const area = currentArea();
   const project = currentProject();
   const layerDefinitions = imageryLayers(area);
@@ -2717,20 +2744,29 @@ async function renderLayers() {
     button.classList.toggle("active", button.dataset.compareMode === state.compareMode);
   });
 
+  const needsSecondary = state.compareMode !== "single" || state.showChangeHighlight;
+  const needsDsmGuide = state.showGuideDsm;
+  const needsPrimaryContour = state.showGuideContours || state.showChangeHighlight;
+  const needsSecondaryContour = state.showChangeHighlight;
   const [primarySrc, secondarySrc, guideDsmSrc, primaryGuideContourSrc, secondaryGuideContourSrc] = await Promise.all([
     resolveExistingAsset(surveyAssetCandidates(project.id, primarySurvey.id, area.id, primaryLayer.fileName)),
-    resolveExistingAsset(surveyAssetCandidates(project.id, secondarySurvey.id, area.id, secondaryLayer.fileName)),
-    dsmLayer ? resolveExistingAsset(surveyAssetCandidates(project.id, primarySurvey.id, area.id, dsmLayer.fileName)) : Promise.resolve(""),
-    contourLayer ? resolveExistingAsset(surveyAssetCandidates(project.id, primarySurvey.id, area.id, contourLayer.fileName)) : Promise.resolve(""),
-    contourLayer ? resolveExistingAsset(surveyAssetCandidates(project.id, secondarySurvey.id, area.id, contourLayer.fileName)) : Promise.resolve("")
+    needsSecondary ? resolveExistingAsset(surveyAssetCandidates(project.id, secondarySurvey.id, area.id, secondaryLayer.fileName)) : Promise.resolve(""),
+    needsDsmGuide && dsmLayer ? resolveExistingAsset(surveyAssetCandidates(project.id, primarySurvey.id, area.id, dsmLayer.fileName)) : Promise.resolve(""),
+    needsPrimaryContour && contourLayer ? resolveExistingAsset(surveyAssetCandidates(project.id, primarySurvey.id, area.id, contourLayer.fileName)) : Promise.resolve(""),
+    needsSecondaryContour && contourLayer ? resolveExistingAsset(surveyAssetCandidates(project.id, secondarySurvey.id, area.id, contourLayer.fileName)) : Promise.resolve("")
   ]);
-  const [primaryDisplaySrc, secondaryDisplaySrc, guideDsmDisplaySrc, primaryGuideContourDisplaySrc, secondaryGuideContourDisplaySrc] = await Promise.all([
-    prepareSectionDisplayAsset(primarySrc),
-    prepareSectionDisplayAsset(secondarySrc),
-    prepareSectionDisplayAsset(guideDsmSrc),
-    prepareSectionDisplayAsset(primaryGuideContourSrc),
-    prepareSectionDisplayAsset(secondaryGuideContourSrc)
-  ]);
+  // The comparison viewer displays the approved source exports directly. The
+  // section-only edge cleanup below creates large canvases and temporary PNGs;
+  // applying it to every comparison layer causes avoidable decode, memory, and
+  // main-thread work without changing the underlying evidence.
+  const [primaryDisplaySrc, secondaryDisplaySrc, guideDsmDisplaySrc, primaryGuideContourDisplaySrc, secondaryGuideContourDisplaySrc] = [
+    primarySrc,
+    secondarySrc,
+    guideDsmSrc,
+    primaryGuideContourSrc,
+    secondaryGuideContourSrc
+  ];
+  if (!isCurrentTabRender(render)) return;
   const primaryExists = Boolean(primarySrc);
   const secondaryExists = Boolean(secondarySrc);
   const guideDsmExists = Boolean(guideDsmSrc);
@@ -2912,6 +2948,7 @@ async function renderLayers() {
 }
 
 async function renderSections() {
+  const render = beginTabRender("sections");
   const baseArea = currentArea();
   const survey = currentSurvey();
   const project = currentProject();
@@ -2951,6 +2988,7 @@ async function renderSections() {
     resolveExistingAsset(overlayCandidates)
   ]);
   const basemapDisplayPath = await prepareSectionDisplayAsset(basemapPath);
+  if (!isCurrentTabRender(render)) return;
   const basemapExists = Boolean(basemapPath);
   const overlayExists = Boolean(overlayPath);
   const surveyProfiles = project.surveys.map((profileSurvey, index) => {
@@ -3562,10 +3600,11 @@ async function renderVolumePrevious() {
 }
 
 async function renderVolume() {
+  const render = beginTabRender("volume");
   const project = currentProject();
   const selectedSurvey = currentSurvey();
   if (selectedSurvey.id === "2026-10-12" && !currentVolumeDataset()) {
-    await renderPendingVolumeVerification(project, selectedSurvey, currentArea());
+    await renderPendingVolumeVerification(project, selectedSurvey, currentArea(), () => isCurrentTabRender(render));
     return;
   }
   const sandboxComparisonEntries = Object.entries(project.volumeChangeComparisons || {})
@@ -3588,6 +3627,7 @@ async function renderVolume() {
     : activeComparisonSurvey(project, survey);
   const areaDataset = volumeDataset?.areas?.[sandboxArea.id] || null;
   const sharedPolygons = await loadSharedAreaPolygons(project.id, sandboxArea.id);
+  if (!isCurrentTabRender(render)) return;
   const configuredPolygons = areaDataset?.polygons || [];
   const polygons = mergeVolumePolygons(configuredPolygons, sharedPolygons);
   const hasConfiguredRows = configuredPolygons.length > 0;
@@ -3615,6 +3655,7 @@ async function renderVolume() {
   const viewerGuideUse = areaDataset?.viewerGuideUse
     || "Start by turning the model around and zooming into the area you care about. If the view feels too busy, switch off Show base terrain to focus on the colour change only. If the model looks too thin or patchy, increase point size. If it looks too chunky, reduce point size for a cleaner look.";
   const trendData = area.id === volumeChangeSettings.sandboxAreaId ? await loadSandboxTrendData() : null;
+  if (!isCurrentTabRender(render)) return;
 
   const [
     baselineImageSrc,
@@ -3644,7 +3685,9 @@ async function renderVolume() {
       ])
       : Promise.resolve("")
   ]);
+  if (!isCurrentTabRender(render)) return;
   const allReferenceMaps = await loadSandboxReferenceMaps(project.id, sandboxArea.id);
+  if (!isCurrentTabRender(render)) return;
 
   const baselineImageExists = Boolean(baselineImageSrc);
   const currentImageExists = Boolean(currentImageSrc);
@@ -3772,7 +3815,7 @@ async function renderVolume() {
           data-volume-lightbox-rotation="0"
         >
           <div class="volume-trend-map__stage">
-            <img src="${escapeAttr(data.imageSrc)}" alt="Trend classification map for ${escapeAttr(data.manifest.area_label || sandboxArea.label)} across the available survey rounds">
+          <img loading="lazy" decoding="async" src="${escapeAttr(data.imageSrc)}" alt="Trend classification map for ${escapeAttr(data.manifest.area_label || sandboxArea.label)} across the available survey rounds">
           </div>
         </button>
         <figcaption class="muted">Use this map as the long-term view. The 3D viewer focuses on the latest comparison, while this shows the broader multi-round pattern in one place.</figcaption>
@@ -4107,11 +4150,12 @@ async function renderRegistryVolume(registry) {
 
 }
 
-async function renderPendingVolumeVerification(project, survey, area) {
+async function renderPendingVolumeVerification(project, survey, area, isCurrent = () => true) {
   const baselineSurvey = activeComparisonSurvey(project, survey);
   const currentImageSrc = await resolveExistingAsset(
     surveyAssetCandidates(project.id, survey.id, area.id, "ortho.jpg")
   );
+  if (!isCurrent()) return;
 
   const hasHistoricalArea8Review = area.id === volumeChangeSettings.sandboxAreaId;
   if (hasHistoricalArea8Review) {
@@ -4155,6 +4199,7 @@ async function renderPendingVolumeVerification(project, survey, area) {
     loadSandboxReferenceMaps(project.id, area.id),
     loadScanSixReferenceMaps(survey.id, area.id)
   ]);
+  if (!isCurrent()) return;
   const allReferenceMaps = [...historicReferenceMaps, ...scanSixReferenceMaps];
   els.volumeImageSummary.textContent = scanSixReferenceMaps.length
     ? "Historical reference maps and all available Scan 6 visual comparison exports are shown below. Scan 6 maps are provisional visual evidence only; quantitative figures, zones, and scientific approval remain withheld."
@@ -4288,12 +4333,7 @@ function updateArea(areaId) {
   resetView();
   fillSelect(els.areaSelect, areaSelectOptions(), state.areaId);
   renderShellStage();
-  renderAreas();
-  renderPanorama();
-  renderVolume();
-  renderLayers();
-  renderSections();
-  renderAdminIfEnabled();
+  renderActiveTab();
   syncUrlState();
 }
 
@@ -5821,7 +5861,7 @@ function renderVolumeReferenceGallery(cards, options = {}) {
         data-volume-lightbox-alt="${escapeAttr(item.alt || item.title || "Reference image")}"
       >
         <div class="volume-reference-stage">
-          <img src="${escapeAttr(item.src)}" alt="${escapeAttr(item.alt || item.title || "Reference image")}">
+          <img loading="lazy" decoding="async" src="${escapeAttr(item.src)}" alt="${escapeAttr(item.alt || item.title || "Reference image")}">
         </div>
       </button>
       <figcaption class="volume-reference-card__meta">
@@ -5869,7 +5909,7 @@ function renderVolumeComparePicker() {
   els.volumeComparePickerGrid.innerHTML = state.volumeComparePickerItems.map((item, index) => {
     const isSelected = selected.has(index);
     const selectionOrder = state.volumeComparePickerSelected.indexOf(index) + 1;
-    return `<button class="volume-compare-picker__card ${isSelected ? "is-selected" : ""}" type="button" data-volume-compare-index="${index}" aria-pressed="${isSelected ? "true" : "false"}"><div class="volume-compare-picker__thumb"><img src="${escapeAttr(item.src)}" alt="${escapeAttr(item.alt)}"></div><div class="volume-compare-picker__meta"><div class="volume-compare-picker__meta-head"><strong>${escapeHtml(item.label)}</strong><span class="volume-compare-picker__selection">${isSelected ? `Selected ${selectionOrder}` : "Select"}</span></div><span>${escapeHtml(item.title)}</span></div></button>`;
+    return `<button class="volume-compare-picker__card ${isSelected ? "is-selected" : ""}" type="button" data-volume-compare-index="${index}" aria-pressed="${isSelected ? "true" : "false"}"><div class="volume-compare-picker__thumb"><img loading="lazy" decoding="async" src="${escapeAttr(item.src)}" alt="${escapeAttr(item.alt)}"></div><div class="volume-compare-picker__meta"><div class="volume-compare-picker__meta-head"><strong>${escapeHtml(item.label)}</strong><span class="volume-compare-picker__selection">${isSelected ? `Selected ${selectionOrder}` : "Select"}</span></div><span>${escapeHtml(item.title)}</span></div></button>`;
   }).join("");
   const count = state.volumeComparePickerSelected.length;
   els.volumeComparePickerStatus.textContent = count < 2 ? "Choose two to four thumbnail maps to compare." : count === 4 ? "Four maps selected. Compare is ready." : `${count} maps selected. You can add up to ${4 - count} more.`;
@@ -7148,19 +7188,14 @@ async function assetExists(src) {
   if (state.assetStatusCache.has(src)) {
     return state.assetStatusCache.get(src);
   }
-
-  let result;
-  if (src.endsWith(".csv") || src.endsWith(".json")) {
-    result = await fetch(src).then((response) => response.ok).catch(() => false);
-  } else {
-    result = await new Promise((resolve) => {
-      const image = new Image();
-      image.onload = () => resolve(true);
-      image.onerror = () => resolve(false);
-      image.src = src;
-    });
-  }
-
+  // Loading an Image merely to test it downloads and decodes the entire map.
+  // All demo assets are same-origin and authenticated, so a HEAD response is
+  // sufficient and retains the existing session access boundary.
+  const request = fetch(src, { method: "HEAD" })
+    .then((response) => response.ok)
+    .catch(() => false);
+  state.assetStatusCache.set(src, request);
+  const result = await request;
   state.assetStatusCache.set(src, result);
   return result;
 }
@@ -7420,13 +7455,14 @@ function renderCoverageCard(item) {
   `;
 }
 
-function activateTab(tabName) {
+function activateTab(tabName, options = {}) {
   const safeTab = (!adminToolsEnabled() || !state.adminMode) && tabName === "admin"
     ? "overview"
     : tabName;
   if (safeTab !== "sections") {
     closeSectionInsightOverlay();
   }
+  suspendInactiveEmbeds(safeTab);
   state.activeTab = safeTab;
   document.querySelectorAll(".tab").forEach((item) => {
     item.classList.toggle("active", item.dataset.tab === safeTab);
@@ -7437,6 +7473,22 @@ function activateTab(tabName) {
   renderShellToolbar();
   renderShellStage();
   syncUrlState();
+  if (options.render !== false) {
+    renderActiveTab();
+  }
+}
+
+function suspendInactiveEmbeds(nextTab) {
+  if (nextTab !== "weather" && els.weatherFrame?.getAttribute("src")) {
+    els.weatherFrame.removeAttribute("src");
+    state.weatherFrameSrc = "";
+  }
+  if (nextTab !== "panorama" && els.panoramaFrame?.getAttribute("src")) {
+    els.panoramaFrame.removeAttribute("src");
+  }
+  if (nextTab !== "volume" && els.volumeViewerFrame?.getAttribute("src")) {
+    els.volumeViewerFrame.removeAttribute("src");
+  }
 }
 
 function syncAdminVisibility() {
@@ -7447,9 +7499,9 @@ function syncAdminVisibility() {
   els.adminModeToggle.classList.toggle("hidden", !adminToolsEnabled());
   els.adminModeToggle.textContent = state.adminMode ? "Close Admin Console" : "Open Admin Console";
   if (!canShowAdmin && state.activeTab === "admin") {
-    activateTab("overview");
+    activateTab("overview", { render: false });
   } else {
-    activateTab(state.activeTab || "overview");
+    activateTab(state.activeTab || "overview", { render: false });
   }
 }
 
