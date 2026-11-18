@@ -24,11 +24,22 @@ const ACCESS_USERS_PATH = resolveAccessUsersPath(
   process.env.ACCESS_USERS_PATH
   || (fs.existsSync("/var/data") ? "/var/data/access-users.json" : "./data/access-users.json")
 );
+const INVITATIONS_PATH = resolveAccessUsersPath(
+  process.env.INVITATIONS_PATH
+  || (fs.existsSync("/var/data") ? "/var/data/demo-invitations.json" : "./data/demo-invitations.json")
+);
 const LOGIN_PAGE_PATH = path.join(__dirname, "login.html");
 const SESSION_COOKIE_NAME = "fsm_session";
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
+const INVITATION_DURATION_DAYS = new Set([3, 7, 14, 30]);
+const INVITATION_TOKEN_BYTES = 32;
+const INVITATION_REDEMPTION_LIMIT = 20;
+const INVITATION_REDEMPTION_WINDOW_MS = 15 * 60 * 1000;
+const INVITATION_CREATION_LIMIT = 20;
+const INVITATION_CREATION_WINDOW_MS = 60 * 60 * 1000;
 const DEMO_OPEN_ACCESS = false;
 const sessions = new Map();
+const rateLimitBuckets = new Map();
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -44,6 +55,7 @@ const mimeTypes = {
 };
 
 ensureAccessUsersStore();
+ensureInvitationsStore();
 
 http.createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
@@ -61,6 +73,16 @@ http.createServer(async (request, response) => {
 
   if (request.method === "POST" && url.pathname === "/api/site-auth/login") {
     await handleSiteAuthLoginRequest(request, response);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/invite") {
+    serveInvitationRedeemPage(response);
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/invitations/redeem") {
+    await handleInvitationRedemptionRequest(request, response);
     return;
   }
 
@@ -116,6 +138,21 @@ http.createServer(async (request, response) => {
 
   if (request.method === "GET" && url.pathname === "/api/access-users") {
     await handleAccessUsersListRequest(response, session);
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/invitations") {
+    await handleInvitationsListRequest(response, session);
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/invitations") {
+    await handleInvitationCreateRequest(request, response, session);
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/invitations/update") {
+    await handleInvitationUpdateRequest(request, response, session);
     return;
   }
 
@@ -460,6 +497,10 @@ async function handleAdminAuthRequest(request, response, session) {
       sendJson(response, 401, { error: "Sign-in required." });
       return;
     }
+    if (session.authType === "invitation") {
+      sendJson(response, 403, { error: "Invitation access cannot open the admin console." });
+      return;
+    }
     if (!ADMIN_PASSWORD) {
       sendJson(response, 500, { error: "Server configuration error: ADMIN_PASSWORD is not set." });
       return;
@@ -547,6 +588,7 @@ async function handleSiteAuthLoginRequest(request, response) {
       label: authUser.label,
       expiresAt: sessionExpiresAt,
       accessExpiresAt: authUser.expiresAt,
+      authType: "password",
       isMaster: authUser.isMaster,
       isAdmin: authUser.isAdmin ?? authUser.isMaster
     });
@@ -715,6 +757,146 @@ async function handleAccessUsersDeleteRequest(request, response, session) {
   }
 }
 
+async function handleInvitationRedemptionRequest(request, response) {
+  try {
+    const body = await readJsonBody(request);
+    const token = normaliseInvitationToken(body.token);
+    if (!takeRateLimit(`invite-redemption:${request.socket.remoteAddress || "unknown"}`, INVITATION_REDEMPTION_LIMIT, INVITATION_REDEMPTION_WINDOW_MS)) {
+      sendJson(response, 429, { error: "Too many invitation attempts. Please wait and try again." }, invitationResponseHeaders());
+      return;
+    }
+
+    const invitations = loadInvitations();
+    const invitation = invitations.find((item) => tokenHashMatches(item.tokenHash, hashInvitationToken(token)));
+    if (!isInvitationUsable(invitation)) {
+      sendJson(response, 410, { error: "This invitation is no longer available." }, invitationResponseHeaders());
+      return;
+    }
+
+    recordInvitationVisit(invitations, invitation);
+    const expiresAt = Math.min(Date.parse(invitation.expiresAt), Date.now() + SESSION_DURATION_MS);
+    const sessionId = crypto.randomUUID();
+    sessions.set(sessionId, {
+      id: sessionId,
+      userId: `invite:${invitation.id}`,
+      username: "invited-client",
+      label: invitation.recipientName,
+      expiresAt,
+      accessExpiresAt: Date.parse(invitation.expiresAt),
+      invitationId: invitation.id,
+      authType: "invitation",
+      isMaster: false,
+      isAdmin: false
+    });
+    sendJson(response, 200, { ok: true }, {
+      ...invitationResponseHeaders(),
+      "Set-Cookie": buildSessionCookie(sessionId, expiresAt, request)
+    });
+  } catch {
+    sendJson(response, 400, { error: "This invitation is invalid." }, invitationResponseHeaders());
+  }
+}
+
+async function handleInvitationsListRequest(response, session) {
+  if (!requireAdminSession(response, session)) {
+    return;
+  }
+  sendJson(response, 200, { invitations: sanitiseInvitations(loadInvitations()) });
+}
+
+async function handleInvitationCreateRequest(request, response, session) {
+  try {
+    if (!requireAdminSession(response, session)) {
+      return;
+    }
+    if (!takeRateLimit(`invite-create:${session.id}`, INVITATION_CREATION_LIMIT, INVITATION_CREATION_WINDOW_MS)) {
+      sendJson(response, 429, { error: "Invitation creation limit reached. Please wait before creating more links." });
+      return;
+    }
+    const body = await readJsonBody(request);
+    const recipientName = normaliseInvitationText(body.recipientName, "Recipient name", 120);
+    const organisation = normaliseInvitationText(body.organisation, "Organisation", 160);
+    const email = normaliseInvitationEmail(body.email);
+    const durationDays = Number(body.durationDays || 7);
+    if (!INVITATION_DURATION_DAYS.has(durationDays)) {
+      sendJson(response, 400, { error: "Expiry must be 3, 7, 14, or 30 days." });
+      return;
+    }
+
+    const token = crypto.randomBytes(INVITATION_TOKEN_BYTES).toString("base64url");
+    const createdAt = new Date().toISOString();
+    const invitation = {
+      id: crypto.randomUUID(),
+      recipientName,
+      organisation,
+      email,
+      tokenHash: hashInvitationToken(token),
+      createdAt,
+      updatedAt: createdAt,
+      expiresAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString(),
+      revokedAt: null,
+      firstVisitAt: null,
+      lastVisitAt: null,
+      visitCount: 0
+    };
+    const invitations = loadInvitations();
+    invitations.push(invitation);
+    saveInvitations(invitations);
+
+    sendJson(response, 201, {
+      invitation: sanitiseInvitation(invitation),
+      invitationUrl: buildInvitationUrl(request, token)
+    }, { "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" });
+  } catch (error) {
+    sendJson(response, 400, { error: error.message });
+  }
+}
+
+async function handleInvitationUpdateRequest(request, response, session) {
+  try {
+    if (!requireAdminSession(response, session)) {
+      return;
+    }
+    const body = await readJsonBody(request);
+    const id = String(body.id || "").trim();
+    const action = String(body.action || "").trim();
+    if (!id || !["revoke", "extend"].includes(action)) {
+      sendJson(response, 400, { error: "Invitation id and a valid action are required." });
+      return;
+    }
+    const invitations = loadInvitations();
+    const invitation = invitations.find((item) => item.id === id);
+    if (!invitation) {
+      sendJson(response, 404, { error: "Invitation not found." });
+      return;
+    }
+    if (action === "revoke") {
+      if (!invitation.revokedAt) {
+        invitation.revokedAt = new Date().toISOString();
+        invitation.updatedAt = invitation.revokedAt;
+        saveInvitations(invitations);
+      }
+    } else {
+      const durationDays = Number(body.durationDays || 7);
+      if (!INVITATION_DURATION_DAYS.has(durationDays)) {
+        sendJson(response, 400, { error: "Extension must be 3, 7, 14, or 30 days." });
+        return;
+      }
+      if (invitation.revokedAt) {
+        sendJson(response, 409, { error: "A revoked invitation cannot be extended. Create a new invitation instead." });
+        return;
+      }
+      const baseTime = Math.max(Date.now(), Date.parse(invitation.expiresAt) || 0);
+      invitation.expiresAt = new Date(baseTime + durationDays * 24 * 60 * 60 * 1000).toISOString();
+      invitation.updatedAt = new Date().toISOString();
+      saveInvitations(invitations);
+    }
+    sendJson(response, 200, { invitations: sanitiseInvitations(invitations) });
+  } catch (error) {
+    sendJson(response, 400, { error: error.message });
+  }
+}
+
 function serveLoginPage(response) {
   response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
   fs.createReadStream(LOGIN_PAGE_PATH).pipe(response);
@@ -733,6 +915,154 @@ function ensureAccessUsersStore() {
     const seedUsers = loadSeedAccessUsers();
     fs.writeFileSync(ACCESS_USERS_PATH, JSON.stringify({ users: seedUsers }, null, 2));
   }
+}
+
+function ensureInvitationsStore() {
+  fs.mkdirSync(path.dirname(INVITATIONS_PATH), { recursive: true });
+  if (!fs.existsSync(INVITATIONS_PATH)) {
+    fs.writeFileSync(INVITATIONS_PATH, JSON.stringify({ invitations: [] }, null, 2));
+  }
+}
+
+function loadInvitations() {
+  ensureInvitationsStore();
+  const payload = JSON.parse(fs.readFileSync(INVITATIONS_PATH, "utf8"));
+  return Array.isArray(payload?.invitations) ? payload.invitations : [];
+}
+
+function saveInvitations(invitations) {
+  fs.writeFileSync(INVITATIONS_PATH, JSON.stringify({ invitations }, null, 2));
+}
+
+function sanitiseInvitations(invitations) {
+  return invitations
+    .slice()
+    .sort((left, right) => Date.parse(right.createdAt || 0) - Date.parse(left.createdAt || 0))
+    .map(sanitiseInvitation);
+}
+
+function sanitiseInvitation(invitation) {
+  const now = Date.now();
+  const expiresAt = invitation.expiresAt || null;
+  const expired = Boolean(expiresAt && Date.parse(expiresAt) <= now);
+  return {
+    id: invitation.id,
+    recipientName: invitation.recipientName,
+    organisation: invitation.organisation,
+    email: invitation.email || "",
+    createdAt: invitation.createdAt || null,
+    updatedAt: invitation.updatedAt || null,
+    expiresAt,
+    revokedAt: invitation.revokedAt || null,
+    firstVisitAt: invitation.firstVisitAt || null,
+    lastVisitAt: invitation.lastVisitAt || null,
+    visitCount: Number(invitation.visitCount || 0),
+    status: invitation.revokedAt ? "revoked" : expired ? "expired" : "active"
+  };
+}
+
+function normaliseInvitationText(value, fieldName, maxLength) {
+  const text = String(value || "").trim();
+  if (!text) {
+    throw new Error(`${fieldName} is required.`);
+  }
+  if (text.length > maxLength) {
+    throw new Error(`${fieldName} must be ${maxLength} characters or fewer.`);
+  }
+  return text;
+}
+
+function normaliseInvitationEmail(value) {
+  const email = String(value || "").trim();
+  if (!email) {
+    return "";
+  }
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("Email must be a valid email address.");
+  }
+  return email;
+}
+
+function hashInvitationToken(token) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+function tokenHashMatches(expectedHash, actualHash) {
+  if (!/^[a-f0-9]{64}$/i.test(String(expectedHash || "")) || !/^[a-f0-9]{64}$/i.test(actualHash)) {
+    return false;
+  }
+  return crypto.timingSafeEqual(Buffer.from(expectedHash, "hex"), Buffer.from(actualHash, "hex"));
+}
+
+function normaliseInvitationToken(value) {
+  const token = String(value || "").trim();
+  if (!/^[A-Za-z0-9_-]{40,128}$/.test(token)) {
+    throw new Error("Invalid invitation token.");
+  }
+  return token;
+}
+
+function isInvitationUsable(invitation) {
+  return Boolean(
+    invitation
+    && !invitation.revokedAt
+    && invitation.expiresAt
+    && Number.isFinite(Date.parse(invitation.expiresAt))
+    && Date.parse(invitation.expiresAt) > Date.now()
+  );
+}
+
+function recordInvitationVisit(invitations, invitation) {
+  const now = new Date().toISOString();
+  invitation.firstVisitAt = invitation.firstVisitAt || now;
+  invitation.lastVisitAt = now;
+  invitation.visitCount = Number(invitation.visitCount || 0) + 1;
+  invitation.updatedAt = now;
+  saveInvitations(invitations);
+}
+
+function buildInvitationUrl(request, token) {
+  const forwardedProto = String(request.headers["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+  const protocol = forwardedProto === "https" || request.socket.encrypted ? "https" : "http";
+  const host = String(request.headers.host || "").trim();
+  if (!/^[A-Za-z0-9.-]+(?::\d{1,5})?$/.test(host)) {
+    throw new Error("Could not determine a safe invitation URL for this server.");
+  }
+  return `${protocol}://${host}/invite#${token}`;
+}
+
+function takeRateLimit(key, limit, windowMs) {
+  const now = Date.now();
+  for (const [bucketKey, timestamps] of rateLimitBuckets.entries()) {
+    const current = timestamps.filter((timestamp) => timestamp > now - windowMs);
+    if (current.length) {
+      rateLimitBuckets.set(bucketKey, current);
+    } else {
+      rateLimitBuckets.delete(bucketKey);
+    }
+  }
+  const timestamps = rateLimitBuckets.get(key) || [];
+  if (timestamps.length >= limit) {
+    return false;
+  }
+  timestamps.push(now);
+  rateLimitBuckets.set(key, timestamps);
+  return true;
+}
+
+function invitationResponseHeaders() {
+  return {
+    "Cache-Control": "no-store",
+    "Referrer-Policy": "no-referrer"
+  };
+}
+
+function serveInvitationRedeemPage(response) {
+  response.writeHead(200, {
+    "Content-Type": "text/html; charset=utf-8",
+    ...invitationResponseHeaders()
+  });
+  response.end(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Opening your demo</title><body><main><h1>Opening your FutureScaping demo</h1><p id="message">Checking your invitation…</p></main><script>const token=window.location.hash.slice(1);history.replaceState(null,"",window.location.pathname);const message=document.getElementById("message");if(!/^[A-Za-z0-9_-]{40,128}$/.test(token)){message.textContent="This invitation is invalid. Please contact FutureScaping if you need a new link."}else{fetch("/api/invitations/redeem",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token})}).then(async response=>{if(!response.ok){const body=await response.json().catch(()=>({}));throw new Error(body.error||"This invitation is no longer available.")}window.location.replace("/")}).catch(error=>{message.textContent=error.message})}</script></body></html>`);
 }
 
 function loadSeedAccessUsers() {
@@ -828,6 +1158,14 @@ function getSessionFromRequest(request) {
   if (session.expiresAt <= Date.now()) {
     sessions.delete(sessionId);
     return null;
+  }
+  if (session.authType === "invitation") {
+    const invitation = loadInvitations().find((item) => item.id === session.invitationId);
+    if (!isInvitationUsable(invitation)) {
+      sessions.delete(sessionId);
+      return null;
+    }
+    session.accessExpiresAt = Date.parse(invitation.expiresAt);
   }
   return session;
 }

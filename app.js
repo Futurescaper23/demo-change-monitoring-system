@@ -76,7 +76,9 @@ import { volumeChangeSettings } from "./src/data/volumeChange.js?v=20260529g";
   volumeComparisonId: null,
   volumeZoneId: null,
   accessUsers: [],
-  accessUsersFilter: ""
+  accessUsersFilter: "",
+  invitations: [],
+  invitationsLoaded: false
     };
 
 const VALID_TABS = new Set(projectConfig.navigation.tabs);
@@ -653,6 +655,16 @@ const els = {
   accessUsersFilter: byId("accessUsersFilter"),
   accessUsersCount: byId("accessUsersCount"),
   accessUsersGrid: byId("accessUsersGrid"),
+  invitationRecipientInput: byId("invitationRecipientInput"),
+  invitationOrganisationInput: byId("invitationOrganisationInput"),
+  invitationEmailInput: byId("invitationEmailInput"),
+  invitationDurationInput: byId("invitationDurationInput"),
+  createInvitationBtn: byId("createInvitationBtn"),
+  invitationStatus: byId("invitationStatus"),
+  generatedInvitation: byId("generatedInvitation"),
+  generatedInvitationUrl: byId("generatedInvitationUrl"),
+  copyInvitationLinkBtn: byId("copyInvitationLinkBtn"),
+  invitationsGrid: byId("invitationsGrid"),
   workflowGrid: byId("workflowGrid"),
   tabs: byId("tabs"),
   backToTopBtn: byId("backToTopBtn"),
@@ -1091,6 +1103,28 @@ function bindEvents() {
 
   els.createAccessUserBtn?.addEventListener("click", () => {
     createAccessUser();
+  });
+
+  els.createInvitationBtn?.addEventListener("click", () => {
+    createInvitation();
+  });
+
+  els.copyInvitationLinkBtn?.addEventListener("click", () => {
+    copyInvitationLink();
+  });
+
+  els.invitationsGrid?.addEventListener("click", (event) => {
+    const revokeButton = event.target.closest("[data-invitation-revoke]");
+    if (revokeButton) {
+      updateInvitation(revokeButton.dataset.invitationRevoke, "revoke");
+      return;
+    }
+    const extendButton = event.target.closest("[data-invitation-extend]");
+    if (extendButton) {
+      const card = extendButton.closest("[data-invitation-card]");
+      const durationDays = Number(card?.querySelector("[data-invitation-duration]")?.value || 7);
+      updateInvitation(extendButton.dataset.invitationExtend, "extend", durationDays);
+    }
   });
 
   els.accessUsersFilter?.addEventListener("input", () => {
@@ -4148,6 +4182,13 @@ async function renderAdmin() {
       await refreshAccessUsers();
     } catch (error) {
       els.accessUserStatus.innerHTML = detail("Report logins", error.message);
+    }
+  }
+  if (!state.invitationsLoaded) {
+    try {
+      await refreshInvitations();
+    } catch (error) {
+      els.invitationStatus.innerHTML = detail("Client invitations", error.message);
     }
   }
   const areaHasOverride = Boolean(areaOverride(project, survey.id, area.id) && Object.keys(areaOverride(project, survey.id, area.id)).length);
@@ -7548,6 +7589,137 @@ function renderAccessUsersAdmin() {
       </article>
     `;
   }).join("");
+}
+
+function renderInvitationsAdmin() {
+  if (!els.invitationsGrid) {
+    return;
+  }
+  const invitations = Array.isArray(state.invitations) ? state.invitations.slice() : [];
+  if (!invitations.length) {
+    els.invitationsGrid.innerHTML = `
+      <article class="admin-access-empty">
+        <h3>No client invitations yet</h3>
+        <p>Create a time-limited invitation link for a prospective client. Invitation secrets are never shown again after creation.</p>
+      </article>
+    `;
+    return;
+  }
+
+  els.invitationsGrid.innerHTML = invitations.map((invitation) => {
+    const status = capitalise(invitation.status || "active");
+    const expiry = invitation.expiresAt ? new Date(invitation.expiresAt).toLocaleString("en-GB") : "Unknown";
+    const firstVisit = invitation.firstVisitAt ? new Date(invitation.firstVisitAt).toLocaleString("en-GB") : "Not opened";
+    const lastVisit = invitation.lastVisitAt ? new Date(invitation.lastVisitAt).toLocaleString("en-GB") : "Not opened";
+    const recipientDetail = [invitation.organisation, invitation.email].filter(Boolean).join(" · ");
+    const canExtend = invitation.status !== "revoked";
+    return `
+      <article class="admin-access-card" data-invitation-card="${escapeAttr(invitation.id)}">
+        <div class="admin-access-card__summary">
+          <div class="admin-access-card__identity">
+            <h3>${escapeHtml(invitation.recipientName)}</h3>
+            <p>${escapeHtml(recipientDetail || "Client invitation")}</p>
+          </div>
+          <span class="admin-access-status admin-access-status--${escapeAttr(invitation.status || "active")}">${escapeHtml(status)}</span>
+          <dl class="admin-access-card__activity admin-invitation-card__activity">
+            <div><dt>First visit</dt><dd>${escapeHtml(firstVisit)}</dd></div>
+            <div><dt>Last visit</dt><dd>${escapeHtml(lastVisit)}</dd></div>
+            <div><dt>Visits</dt><dd>${escapeHtml(String(invitation.visitCount || 0))}</dd></div>
+            <div><dt>Expires</dt><dd>${escapeHtml(expiry)}</dd></div>
+          </dl>
+        </div>
+        <div class="admin-access-card__editor-body">
+          <p class="muted">Invitation link secret is not stored and cannot be displayed again.</p>
+          <div class="admin-actions">
+            ${canExtend ? `<label>Extend by<select data-invitation-duration><option value="3">3 days</option><option value="7" selected>7 days</option><option value="14">14 days</option><option value="30">30 days</option></select></label><button class="area-action" type="button" data-invitation-extend="${escapeAttr(invitation.id)}">Extend Access</button>` : ""}
+            ${invitation.status === "active" ? `<button class="chip admin-access-delete" type="button" data-invitation-revoke="${escapeAttr(invitation.id)}">Revoke Invitation</button>` : ""}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+async function refreshInvitations(statusCopy = "") {
+  const response = await fetch("/api/invitations");
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || "Could not load client invitations.");
+  }
+  state.invitations = payload.invitations || [];
+  state.invitationsLoaded = true;
+  renderInvitationsAdmin();
+  if (statusCopy) {
+    els.invitationStatus.innerHTML = detail("Client invitations", statusCopy);
+  }
+}
+
+async function createInvitation() {
+  const recipientName = els.invitationRecipientInput.value.trim();
+  const organisation = els.invitationOrganisationInput.value.trim();
+  const email = els.invitationEmailInput.value.trim();
+  const durationDays = Number(els.invitationDurationInput.value || 7);
+  if (!recipientName || !organisation) {
+    els.invitationStatus.innerHTML = detail("Client invitations", "Add the recipient name and organisation before creating an invitation.");
+    return;
+  }
+
+  els.invitationStatus.innerHTML = detail("Client invitations", "Creating a secure, passwordless invitation link...");
+  const response = await fetch("/api/invitations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ recipientName, organisation, email, durationDays })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    els.invitationStatus.innerHTML = detail("Client invitations", payload.error || "Could not create the invitation.");
+    return;
+  }
+
+  els.invitationRecipientInput.value = "";
+  els.invitationOrganisationInput.value = "";
+  els.invitationEmailInput.value = "";
+  els.invitationDurationInput.value = "7";
+  els.generatedInvitationUrl.value = payload.invitationUrl || "";
+  els.generatedInvitation.classList.toggle("hidden", !payload.invitationUrl);
+  state.invitationsLoaded = false;
+  await refreshInvitations("Invitation created. Copy the link now; it cannot be recovered later.");
+}
+
+async function copyInvitationLink() {
+  const invitationUrl = els.generatedInvitationUrl?.value || "";
+  if (!invitationUrl) {
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(invitationUrl);
+    els.invitationStatus.innerHTML = detail("Client invitations", "Invitation link copied. Share it only with the intended recipient.");
+  } catch {
+    els.generatedInvitationUrl.focus();
+    els.generatedInvitationUrl.select();
+    els.invitationStatus.innerHTML = detail("Client invitations", "Select and copy the invitation link manually.");
+  }
+}
+
+async function updateInvitation(invitationId, action, durationDays = 7) {
+  if (action === "revoke" && !window.confirm("Revoke this invitation immediately? Any active invitation session will end on its next request.")) {
+    return;
+  }
+  els.invitationStatus.innerHTML = detail("Client invitations", action === "revoke" ? "Revoking invitation..." : "Extending invitation access...");
+  const response = await fetch("/api/invitations/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: invitationId, action, durationDays })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    els.invitationStatus.innerHTML = detail("Client invitations", payload.error || "Could not update the invitation.");
+    return;
+  }
+  state.invitations = payload.invitations || [];
+  state.invitationsLoaded = true;
+  renderInvitationsAdmin();
+  els.invitationStatus.innerHTML = detail("Client invitations", action === "revoke" ? "Invitation revoked. Existing invitation sessions end on their next request." : "Invitation access extended.");
 }
 
 async function refreshAccessUsers(statusCopy = "") {

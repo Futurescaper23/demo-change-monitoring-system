@@ -3936,6 +3936,69 @@ textarea {
   gap: 10px;
 }
 
+.admin-invitations {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(191, 221, 255, 0.15);
+}
+
+.admin-invitation-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid rgba(103, 193, 255, 0.3);
+  border-radius: 14px;
+  background: rgba(15, 51, 83, 0.36);
+}
+
+.admin-invitation-link label {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-invitation-link input {
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.admin-invitation-link p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.admin-invitation-card__activity {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-access-status--revoked {
+  border-color: rgba(255, 145, 145, 0.42);
+  color: #ffc4c4;
+  background: rgba(196, 73, 73, 0.16);
+}
+
+.admin-access-card__editor-body .admin-actions label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.admin-access-card__editor-body .admin-actions select {
+  min-height: 38px;
+  min-width: 110px;
+}
+
 .admin-access-card,
 .admin-access-empty {
   border: 1px solid rgba(165, 207, 255, 0.18);
@@ -4248,6 +4311,14 @@ a { color: var(--accent); }
   .admin-access-card__editor-body {
     padding-left: 14px;
     padding-right: 14px;
+  }
+
+  .admin-invitation-link {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-invitation-link .chip {
+    width: 100%;
   }
 
   html,

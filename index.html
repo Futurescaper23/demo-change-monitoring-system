@@ -670,6 +670,37 @@
             <p id="accessUsersCount" class="muted" aria-live="polite"></p>
           </div>
           <div id="accessUsersGrid" class="admin-access-directory"></div>
+
+          <div class="admin-invitations section-gap">
+            <div class="admin-access-panel__head">
+              <div>
+                <p class="eyebrow">Client invitations</p>
+                <h2>Invite To Demo</h2>
+                <p class="muted">Create a passwordless, time-limited link for a prospective client. The link is shown once; its secret is never retained by the demo.</p>
+              </div>
+            </div>
+            <details class="admin-access-create section-gap">
+              <summary>Create client invitation</summary>
+              <div class="admin-access-create__body">
+                <div class="admin-grid">
+                  <label>Recipient name<input id="invitationRecipientInput" type="text" autocomplete="name" placeholder="Alex Morgan"></label>
+                  <label>Organisation<input id="invitationOrganisationInput" type="text" autocomplete="organization" placeholder="Coastal Partnership"></label>
+                  <label>Email <span class="muted">(optional)</span><input id="invitationEmailInput" type="email" autocomplete="email" placeholder="alex@example.com"></label>
+                  <label>Access duration<select id="invitationDurationInput"><option value="3">3 days</option><option value="7" selected>7 days</option><option value="14">14 days</option><option value="30">30 days</option></select></label>
+                </div>
+                <div class="admin-actions">
+                  <button id="createInvitationBtn" class="area-action" type="button">Create Invitation Link</button>
+                </div>
+              </div>
+            </details>
+            <div id="invitationStatus" class="detail-list section-gap" aria-live="polite"></div>
+            <div id="generatedInvitation" class="admin-invitation-link hidden" aria-live="polite">
+              <label>New invitation link<input id="generatedInvitationUrl" type="text" readonly></label>
+              <button id="copyInvitationLinkBtn" class="chip" type="button">Copy Invitation Link</button>
+              <p class="muted">Copy and share this now. For security, the link cannot be recovered later.</p>
+            </div>
+            <div id="invitationsGrid" class="admin-access-directory section-gap"></div>
+          </div>
         </article>
         <article class="panel">
           <p class="eyebrow">Reusable Pattern</p>
