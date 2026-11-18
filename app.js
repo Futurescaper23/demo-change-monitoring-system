@@ -1396,9 +1396,8 @@ function configuredOverviewHeroImage(surveyId) {
     || "";
 }
 
-function configuredSurveyModelUrl(surveyId) {
-  const directMatch = projectConfig.branding?.niraModelsBySurvey?.[surveyId];
-  return String(directMatch || "").trim();
+function configuredSurveyViewerUrl() {
+  return String(projectConfig.branding?.niraSurveyViewerUrl || "").trim();
 }
 
 function renderShellStageAction(survey) {
@@ -1406,23 +1405,23 @@ function renderShellStageAction(survey) {
     return;
   }
   const shouldShowAction = SURVEY_MODEL_TABS.has(state.activeTab);
-  const modelUrl = configuredSurveyModelUrl(survey?.id);
+  const viewerUrl = configuredSurveyViewerUrl();
   if (!shouldShowAction) {
     els.shellStageAction.innerHTML = "";
     els.shellStageAction.classList.add("hidden");
     els.shellStageAction.setAttribute("aria-hidden", "true");
     return;
   }
-  if (modelUrl) {
+  if (viewerUrl) {
     els.shellStageAction.innerHTML = `
       <a
         class="shell-stage-action-link"
-        href="${escapeAttr(modelUrl)}"
+        href="${escapeAttr(viewerUrl)}"
         target="_blank"
         rel="noopener noreferrer"
       >
-        <span class="shell-stage-action-link__label">View 3D Model Here</span>
-        <span class="shell-stage-action-link__sub">${escapeHtml(`Open the Area 8 model for ${survey.shortDate || survey.label}.`)}</span>
+        <span class="shell-stage-action-link__label">Explore 3D Survey Model</span>
+        <span class="shell-stage-action-link__sub">Open the overall hosted 3D survey viewer. It may not represent the selected survey round or monitoring area.</span>
       </a>
     `;
   } else {
@@ -4136,7 +4135,7 @@ async function renderPendingVolumeVerification(project, survey, area) {
     metric("Selected survey", survey.shortDate, "Current round"),
     metric("Comparison status", "Pending verification", "Quantitative outputs withheld"),
     metric("Available evidence", "Imagery and sections", "Aerial, elevation, contours, and profiles"),
-    metric("3D viewer", hasHistoricalArea8Review ? "Historical A→E viewer" : "Unavailable", hasHistoricalArea8Review ? "Survey Round 6 is excluded" : "No verified hosted Scan F model link")
+    metric("3D viewer", "Overall hosted viewer", "It may not represent the selected survey round or monitoring area")
   ].join("");
 }
 

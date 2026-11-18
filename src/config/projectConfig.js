@@ -64,6 +64,7 @@ export const projectConfig = {
         area8: "https://area-8-panos.netlify.app/"
       }
     },
+    niraSurveyViewerUrl: "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1",
     niraModelsBySurvey: {
       "2026-03-22": "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1",
       "2026-04-18": "https://futurescaping.nira.app/a/K9OHBWGDTW28wy8g4bD28g/1",

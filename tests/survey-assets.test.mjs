@@ -24,7 +24,11 @@ for (const surveyId of expectedSurveys) {
 
 const appSource = fs.readFileSync(new URL("app.js", root), "utf8");
 const configSource = fs.readFileSync(new URL("src/config/projectConfig.js", root), "utf8");
-assert.match(appSource, /return String\(directMatch \|\| ""\)\.trim\(\);/);
+assert.match(appSource, /function configuredSurveyViewerUrl\(\)/);
+assert.match(appSource, /Explore 3D Survey Model/);
+assert.match(appSource, /overall hosted 3D survey viewer/);
+assert.match(configSource, /niraSurveyViewerUrl:\s*"https:\/\/futurescaping\.nira\.app\/a\/K9OHBWGDTW28wy8g4bD28g\/1"/);
+assert.doesNotMatch(appSource, /configuredSurveyModel\(/);
 assert.doesNotMatch(configSource, /"2026-10-12"\s*:\s*"https:\/\/futurescaping\.nira\.app/);
 
 console.log("six-survey asset and Scan F viewer checks passed");
