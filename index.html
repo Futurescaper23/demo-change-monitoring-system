@@ -638,23 +638,38 @@
           <div id="adminBoardSummary" class="stats-grid section-gap"></div>
           <div id="adminBoardGrid" class="card-grid section-gap"></div>
         </article>
-        <article class="panel section-gap">
-          <p class="eyebrow">Access Overview</p>
-          <h2>Active And Expiring Logins</h2>
-          <p class="muted section-gap">Create a permanent harbour login or short-term contractor logins here. Temporary logins stop working automatically once their expiry time is reached.</p>
-          <div class="admin-grid section-gap">
-            <label>Display label<input id="accessLabelInput" type="text" placeholder="Harbour team"></label>
-            <label>Username<input id="accessUsernameInput" type="text" placeholder="harbour"></label>
-            <label>Password<input id="accessPasswordInput" type="text" placeholder="Create a password"></label>
-            <label>Expires at<input id="accessExpiresAtInput" type="datetime-local"></label>
-            <label class="admin-span-2">Notes<textarea id="accessNotesInput" placeholder="Who this is for, what it should be used for, or when it should be revoked."></textarea></label>
+        <article class="panel section-gap admin-access-panel">
+          <div class="admin-access-panel__head">
+            <div>
+              <p class="eyebrow">Report Access</p>
+              <h2>People And Login Access</h2>
+              <p class="muted">Create, find, review, and update report logins without opening a full form for every person.</p>
+            </div>
           </div>
-          <div class="admin-actions section-gap">
-            <button id="createAccessUserBtn" class="area-action" type="button">Create Report Login</button>
-          </div>
-          <div id="accessUserStatus" class="detail-list section-gap"></div>
           <div id="accessUsersSummary" class="stats-grid section-gap"></div>
-          <div id="accessUsersGrid" class="card-grid section-gap"></div>
+
+          <details class="admin-access-create section-gap">
+            <summary>Create report login</summary>
+            <div class="admin-access-create__body">
+              <div class="admin-grid">
+                <label>Display label<input id="accessLabelInput" type="text" placeholder="Harbour team"></label>
+                <label>Username<input id="accessUsernameInput" type="text" placeholder="harbour"></label>
+                <label>Password<input id="accessPasswordInput" type="password" autocomplete="new-password" placeholder="Create a password"></label>
+                <label>Expires at<input id="accessExpiresAtInput" type="datetime-local"></label>
+                <label class="admin-span-2">Notes<textarea id="accessNotesInput" placeholder="Who this is for, what it should be used for, or when it should be revoked."></textarea></label>
+              </div>
+              <div class="admin-actions">
+                <button id="createAccessUserBtn" class="area-action" type="button">Create Report Login</button>
+              </div>
+            </div>
+          </details>
+
+          <div id="accessUserStatus" class="detail-list section-gap"></div>
+          <div class="admin-access-directory-toolbar section-gap">
+            <label class="admin-access-search">Search logins<input id="accessUsersFilter" type="search" autocomplete="off" placeholder="Search by name, username, or note"></label>
+            <p id="accessUsersCount" class="muted" aria-live="polite"></p>
+          </div>
+          <div id="accessUsersGrid" class="admin-access-directory"></div>
         </article>
         <article class="panel">
           <p class="eyebrow">Reusable Pattern</p>

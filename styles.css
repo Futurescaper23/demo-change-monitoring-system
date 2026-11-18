@@ -3830,6 +3830,245 @@ textarea {
     linear-gradient(180deg, rgba(48, 75, 116, 0.98), rgba(31, 51, 83, 0.95));
 }
 
+.admin-access-panel {
+  max-width: 1240px;
+}
+
+.admin-access-panel__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: start;
+}
+
+.admin-access-panel__head h2 {
+  margin-bottom: 6px;
+}
+
+.admin-access-panel__head .muted {
+  max-width: 68ch;
+}
+
+.admin-access-create {
+  border: 1px solid rgba(103, 193, 255, 0.28);
+  border-radius: 16px;
+  background: rgba(7, 20, 39, 0.32);
+}
+
+.admin-access-create > summary,
+.admin-access-card__editor > summary {
+  cursor: pointer;
+  color: #dbeeff;
+  font-weight: 700;
+  list-style: none;
+}
+
+.admin-access-create > summary {
+  padding: 15px 18px;
+}
+
+.admin-access-create > summary::-webkit-details-marker,
+.admin-access-card__editor > summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-access-create > summary::after,
+.admin-access-card__editor > summary::after {
+  content: "+";
+  float: right;
+  color: var(--accent);
+  font-size: 1.2rem;
+  line-height: 0.8;
+}
+
+.admin-access-create[open] > summary::after,
+.admin-access-card__editor[open] > summary::after {
+  content: "−";
+}
+
+.admin-access-create__body {
+  padding: 2px 18px 18px;
+  display: grid;
+  gap: 16px;
+  border-top: 1px solid rgba(191, 221, 255, 0.12);
+}
+
+.admin-access-panel input,
+.admin-access-panel textarea,
+.admin-access-panel select {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
+.admin-access-directory-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(191, 221, 255, 0.15);
+}
+
+.admin-access-search {
+  display: grid;
+  gap: 7px;
+  width: min(100%, 390px);
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-access-search input {
+  min-height: 42px;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.admin-access-directory-toolbar > p {
+  margin: 0 0 11px;
+  white-space: nowrap;
+}
+
+.admin-access-directory {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-access-card,
+.admin-access-empty {
+  border: 1px solid rgba(165, 207, 255, 0.18);
+  border-radius: 16px;
+  background: rgba(8, 24, 47, 0.48);
+  overflow: hidden;
+}
+
+.admin-access-card__summary {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) auto minmax(410px, 2fr);
+  gap: 20px;
+  align-items: center;
+  padding: 16px 18px;
+}
+
+.admin-access-card__identity h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.admin-access-card__identity p,
+.admin-access-card__activity dd,
+.admin-access-card__activity dt {
+  margin: 0;
+}
+
+.admin-access-card__identity p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.admin-access-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(102, 206, 181, 0.35);
+  border-radius: 999px;
+  color: #b7f1df;
+  background: rgba(40, 171, 134, 0.14);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-access-status--disabled {
+  border-color: rgba(255, 194, 93, 0.38);
+  color: #ffe0a2;
+  background: rgba(205, 139, 41, 0.14);
+}
+
+.admin-access-status--expired {
+  border-color: rgba(255, 145, 145, 0.42);
+  color: #ffc4c4;
+  background: rgba(196, 73, 73, 0.16);
+}
+
+.admin-access-card__activity {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-access-card__activity div {
+  min-width: 0;
+}
+
+.admin-access-card__activity dt {
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-access-card__activity dd {
+  margin-top: 5px;
+  color: #eef7ff;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.admin-access-card__editor {
+  border-top: 1px solid rgba(191, 221, 255, 0.14);
+}
+
+.admin-access-card__editor > summary {
+  padding: 12px 18px;
+  color: #abd9ff;
+  font-size: 0.85rem;
+}
+
+.admin-access-card__editor-body {
+  display: grid;
+  gap: 16px;
+  padding: 4px 18px 18px;
+  border-top: 1px solid rgba(191, 221, 255, 0.1);
+}
+
+.admin-access-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  color: #dcecff;
+}
+
+.admin-access-checkbox input {
+  width: auto;
+}
+
+.admin-access-delete {
+  border-color: rgba(255, 145, 145, 0.35);
+  color: #ffd2d2;
+}
+
+.admin-access-empty {
+  padding: 28px;
+}
+
+.admin-access-empty h3,
+.admin-access-empty p {
+  margin: 0;
+}
+
+.admin-access-empty p {
+  margin-top: 7px;
+  color: var(--muted);
+}
+
 .table-wrap {
   overflow-x: auto;
   margin-top: 14px;
@@ -3852,6 +4091,15 @@ th { color: var(--muted); }
 a { color: var(--accent); }
 
 @media (max-width: 1100px) {
+  .admin-access-card__summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .admin-access-card__activity {
+    grid-column: 1 / -1;
+    padding-top: 2px;
+  }
+
   .shell {
     grid-template-columns: 84px minmax(0, 1fr);
     gap: 18px;
@@ -3955,6 +4203,53 @@ a { color: var(--accent); }
 }
 
 @media (max-width: 720px) {
+  .admin-access-directory-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-access-directory-toolbar > p {
+    margin: 0;
+  }
+
+  .admin-access-search {
+    width: 100%;
+  }
+
+  .admin-access-card__summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .admin-access-status {
+    justify-self: start;
+  }
+
+  .admin-access-card__activity {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .admin-access-card__activity div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid rgba(191, 221, 255, 0.12);
+    padding-top: 8px;
+  }
+
+  .admin-access-card__activity dd {
+    margin-top: 0;
+    text-align: right;
+  }
+
+  .admin-access-create__body,
+  .admin-access-card__editor-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
   html,
   body {
     width: 100%;

@@ -75,7 +75,8 @@ import { volumeChangeSettings } from "./src/data/volumeChange.js?v=20260529g";
   volumeComparePickerSelected: [],
   volumeComparisonId: null,
   volumeZoneId: null,
-  accessUsers: []
+  accessUsers: [],
+  accessUsersFilter: ""
     };
 
 const VALID_TABS = new Set(projectConfig.navigation.tabs);
@@ -649,6 +650,8 @@ const els = {
   createAccessUserBtn: byId("createAccessUserBtn"),
   accessUserStatus: byId("accessUserStatus"),
   accessUsersSummary: byId("accessUsersSummary"),
+  accessUsersFilter: byId("accessUsersFilter"),
+  accessUsersCount: byId("accessUsersCount"),
   accessUsersGrid: byId("accessUsersGrid"),
   workflowGrid: byId("workflowGrid"),
   tabs: byId("tabs"),
@@ -1088,6 +1091,11 @@ function bindEvents() {
 
   els.createAccessUserBtn?.addEventListener("click", () => {
     createAccessUser();
+  });
+
+  els.accessUsersFilter?.addEventListener("input", () => {
+    state.accessUsersFilter = els.accessUsersFilter.value.trim();
+    renderAccessUsersAdmin();
   });
 
   els.accessUsersGrid?.addEventListener("click", (event) => {
@@ -7452,7 +7460,6 @@ async function toggleAdminMode() {
 function renderAccessUsersAdmin() {
   const users = Array.isArray(state.accessUsers) ? state.accessUsers.slice() : [];
   const activeUsers = users.filter((item) => item.active && !item.expired);
-  const expiringSoon = activeUsers.filter((item) => item.expiresAt && (Date.parse(item.expiresAt) - Date.now()) <= (1000 * 60 * 60 * 24 * 7));
   const expiredUsers = users.filter((item) => item.expired);
   const usedUsers = users.filter((item) => Number(item.loginCount || 0) > 0);
   const neverUsedUsers = users.filter((item) => !Number(item.loginCount || 0));
@@ -7464,6 +7471,20 @@ function renderAccessUsersAdmin() {
     metric("Expired logins", String(expiredUsers.length), "No longer usable")
   ].join("");
 
+  const query = state.accessUsersFilter.toLocaleLowerCase();
+  const visibleUsers = users
+    .filter((user) => [user.label, user.username, user.notes].some((value) => String(value || "").toLocaleLowerCase().includes(query)))
+    .sort((left, right) => {
+      const statusRank = (user) => user.expired ? 2 : (user.active ? 0 : 1);
+      return statusRank(left) - statusRank(right)
+        || String(left.label || left.username).localeCompare(String(right.label || right.username));
+    });
+  if (els.accessUsersCount) {
+    els.accessUsersCount.textContent = query
+      ? `${visibleUsers.length} of ${users.length} login${users.length === 1 ? "" : "s"}`
+      : `${users.length} login${users.length === 1 ? "" : "s"}`;
+  }
+
   if (!users.length) {
     els.accessUsersGrid.innerHTML = `
       <article class="card">
@@ -7474,7 +7495,17 @@ function renderAccessUsersAdmin() {
     return;
   }
 
-  els.accessUsersGrid.innerHTML = users.map((user) => {
+  if (!visibleUsers.length) {
+    els.accessUsersGrid.innerHTML = `
+      <article class="admin-access-empty">
+        <h3>No matching logins</h3>
+        <p>Try a different name, username, or note.</p>
+      </article>
+    `;
+    return;
+  }
+
+  els.accessUsersGrid.innerHTML = visibleUsers.map((user) => {
     const expiresDisplay = user.expiresAt
       ? new Date(user.expiresAt).toLocaleString("en-GB")
       : "No expiry";
@@ -7485,28 +7516,36 @@ function renderAccessUsersAdmin() {
       ? "Expired"
       : (user.active ? "Active" : "Disabled");
     return `
-      <article class="card admin-access-card" data-access-card="${escapeAttr(user.id)}">
-        <div class="admin-board-meta">
-          <span class="chip">${escapeHtml(user.label || user.username)}</span>
-          <span class="chip">${escapeHtml(statusLabel)}</span>
+      <article class="admin-access-card" data-access-card="${escapeAttr(user.id)}">
+        <div class="admin-access-card__summary">
+          <div class="admin-access-card__identity">
+            <h3>${escapeHtml(user.label || user.username)}</h3>
+            <p>${escapeHtml(user.username)}</p>
+          </div>
+          <span class="admin-access-status admin-access-status--${escapeAttr(statusLabel.toLocaleLowerCase())}">${escapeHtml(statusLabel)}</span>
+          <dl class="admin-access-card__activity">
+            <div><dt>Last used</dt><dd>${escapeHtml(lastLoginDisplay)}</dd></div>
+            <div><dt>Logins</dt><dd>${escapeHtml(String(user.loginCount || 0))}</dd></div>
+            <div><dt>Expiry</dt><dd>${escapeHtml(expiresDisplay)}</dd></div>
+          </dl>
         </div>
-        <div class="admin-grid section-gap">
-          <label>Label<input type="text" data-access-field="label" value="${escapeAttr(user.label || user.username)}"></label>
-          <label>Username<input type="text" value="${escapeAttr(user.username)}" disabled></label>
-          <label>Password reset<input type="text" data-access-field="password" placeholder="Leave blank to keep current"></label>
-          <label>Expires at<input type="datetime-local" data-access-field="expiresAt" value="${escapeAttr(datetimeLocalValue(user.expiresAt))}"></label>
-          <label class="admin-span-2">Notes<textarea data-access-field="notes" placeholder="Notes for this login">${escapeHtml(user.notes || "")}</textarea></label>
-          <label><input type="checkbox" data-access-field="active" ${user.active ? "checked" : ""}> Active</label>
-        </div>
-        <div class="admin-board-meta">
-          <span class="chip">Logins: ${escapeHtml(String(user.loginCount || 0))}</span>
-          <span class="chip">Last used: ${escapeHtml(lastLoginDisplay)}</span>
-        </div>
-        <p class="muted">Current expiry: ${escapeHtml(expiresDisplay)}</p>
-        <div class="admin-actions">
-          <button class="area-action" type="button" data-access-update="${escapeAttr(user.id)}">Save Login</button>
-          <button class="chip" type="button" data-access-delete="${escapeAttr(user.id)}">Delete Login</button>
-        </div>
+        <details class="admin-access-card__editor">
+          <summary>Edit access</summary>
+          <div class="admin-access-card__editor-body">
+            <div class="admin-grid">
+              <label>Display label<input type="text" data-access-field="label" value="${escapeAttr(user.label || user.username)}"></label>
+              <label>Username<input type="text" value="${escapeAttr(user.username)}" disabled></label>
+              <label>Password reset<input type="password" autocomplete="new-password" data-access-field="password" placeholder="Leave blank to keep current"></label>
+              <label>Expires at<input type="datetime-local" data-access-field="expiresAt" value="${escapeAttr(datetimeLocalValue(user.expiresAt))}"></label>
+              <label class="admin-span-2">Notes<textarea data-access-field="notes" placeholder="Notes for this login">${escapeHtml(user.notes || "")}</textarea></label>
+              <label class="admin-access-checkbox"><input type="checkbox" data-access-field="active" ${user.active ? "checked" : ""}> Login is active</label>
+            </div>
+            <div class="admin-actions">
+              <button class="area-action" type="button" data-access-update="${escapeAttr(user.id)}">Save changes</button>
+              <button class="chip admin-access-delete" type="button" data-access-delete="${escapeAttr(user.id)}">Delete login</button>
+            </div>
+          </div>
+        </details>
       </article>
     `;
   }).join("");
