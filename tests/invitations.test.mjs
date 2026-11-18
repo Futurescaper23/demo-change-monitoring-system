@@ -100,6 +100,16 @@ try {
   assert.equal(redeem.headers.get("referrer-policy"), "no-referrer");
   const inviteCookie = cookieFrom(redeem);
   assert.match(inviteCookie, /^fsm_session=/);
+  const firstSessionMaxAge = Number(/Max-Age=(\d+)/.exec(String(redeem.headers.get("set-cookie") || ""))?.[1]);
+  assert.ok(firstSessionMaxAge > 0 && firstSessionMaxAge <= 12 * 60 * 60);
+
+  const reusedInvitation = await request("/api/invitations/redeem", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: rawToken })
+  });
+  assert.equal(reusedInvitation.status, 200);
+  assert.match(cookieFrom(reusedInvitation), /^fsm_session=/);
 
   const inviteSession = await request("/api/site-auth/session", { headers: { Cookie: inviteCookie } });
   const inviteSessionBody = await inviteSession.json();
@@ -117,7 +127,7 @@ try {
 
   const list = await request("/api/invitations", { headers: { Cookie: adminCookie } });
   const listed = await list.json();
-  assert.equal(listed.invitations[0].visitCount, 1);
+  assert.equal(listed.invitations[0].visitCount, 2);
   assert.ok(listed.invitations[0].firstVisitAt);
   assert.ok(listed.invitations[0].lastVisitAt);
   assert.equal(JSON.stringify(listed).includes(rawToken), false);
@@ -176,7 +186,7 @@ try {
   assert.equal(revokedRedeem.status, 410);
 
   const unknownToken = "B".repeat(43);
-  for (let index = 0; index < 16; index += 1) {
+  for (let index = 0; index < 15; index += 1) {
     const unknownRedeem = await request("/api/invitations/redeem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
