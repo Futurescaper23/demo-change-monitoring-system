@@ -1,0 +1,11 @@
+# Legacy local presentation renders: not part of the public demo release.
+assets/area8-hero-2026-09-10.png
+assets/area8-trend-classification-panel-presentation.png
+assets/area8-trend-classification.png
+
+# Local-only authentication is stored below the current user's LocalAppData,
+# never in this repository. These are fallback paths should a developer create
+# a local store beside the project.
+.local-dev/
+.env.local
+data/local-access-users.json

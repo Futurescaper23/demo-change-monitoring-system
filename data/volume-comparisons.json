@@ -1,0 +1,164 @@
+{
+  "schemaVersion": "1.0",
+  "scope": "Client demonstration dataset for one anonymised monitoring reach.",
+  "methodology": {
+    "surfaceMethod": "Later survey surface compared with the earlier survey inside fixed monitoring zones.",
+    "grid": "0.10 m",
+    "classificationThreshold": "+/-0.05 m",
+    "horizontalReference": "British National Grid (EPSG:27700)",
+    "verticalReference": "ODN height"
+  },
+  "trend": {
+    "status": "published",
+    "coverage": "Survey Rounds 1 to 5",
+    "scope": "Approved Area 8 long-term classification using the established Survey 1 to 4 and Survey 4 to 5 intervals.",
+    "note": "Survey Round 6 is intentionally excluded while its quantitative provenance is reviewed."
+  },
+  "comparisons": [
+    {
+      "id": "a-b",
+      "fromSurveyId": "2026-03-22",
+      "toSurveyId": "2026-04-18",
+      "status": "published",
+      "evidenceType": "visual-preview",
+      "title": "Survey 1 to Survey 2",
+      "summary": "Visual before-and-after review is available. No volumetric figures are published for this preview comparison.",
+      "maps": [
+        { "kind": "height", "src": "./survey-data/coastal-change-demo/2026-07-15/area8/area8_A_vs_B_height_change_analysis.png", "title": "Height change analysis" },
+        { "kind": "classification", "src": "./survey-data/coastal-change-demo/2026-07-15/area8/area8_A_vs_B_gain_loss_classification.png", "title": "Sediment change classes" }
+      ]
+    },
+    {
+      "id": "a-c",
+      "fromSurveyId": "2026-03-22",
+      "toSurveyId": "2026-06-16",
+      "status": "published",
+      "evidenceType": "visual-preview",
+      "title": "Survey 1 to Survey 3",
+      "summary": "Visual before-and-after review is available. No volumetric figures are published for this preview comparison.",
+      "maps": [
+        { "kind": "height", "src": "./survey-data/coastal-change-demo/2026-07-15/area8/area8_A_vs_C_height_change_analysis.png", "title": "Height change analysis" },
+        { "kind": "classification", "src": "./survey-data/coastal-change-demo/2026-07-15/area8/area8_A_vs_C_gain_loss_classification.png", "title": "Sediment change classes" }
+      ]
+    },
+    {
+      "id": "c-d",
+      "fromSurveyId": "2026-06-16",
+      "toSurveyId": "2026-07-15",
+      "status": "published",
+      "evidenceType": "measured",
+      "title": "Survey 3 to Survey 4",
+      "summary": "Measured sediment change across the approved fixed monitoring zones.",
+      "analysedAreaM2": 606347,
+      "coverage": "95.7% matching cells",
+      "confidence": "Measured review",
+      "viewerUrl": "./area8-change-viewer/index.html?embed=1",
+      "zones": [
+        { "id": "monitored", "label": "Monitored zone", "gainM3": 30469.038796, "lossM3": 1.594467, "netM3": 30467.44433, "summary": "Overall sediment accumulation in the monitored zone." },
+        { "id": "central", "label": "Central", "gainM3": 43495.603015, "lossM3": 1.646537, "netM3": 43493.956477, "summary": "Overall sediment accumulation in the central monitoring zone." },
+        { "id": "wadebridge", "label": "Wadebridge", "gainM3": 6666.863341, "lossM3": 3388.262514, "netM3": 3278.600827, "summary": "Overall sediment accumulation in this monitoring zone." }
+      ],
+      "maps": [
+        { "kind": "height", "src": "./survey-data/coastal-change-demo/2026-07-15/area8/area8_C_vs_D_height_change_analysis.png", "title": "Height change analysis" },
+        { "kind": "classification", "src": "./survey-data/coastal-change-demo/2026-07-15/area8/area8_C_vs_D_gain_loss_classification.png", "title": "Sediment change classes" }
+      ]
+    },
+    {
+      "id": "d-e",
+      "fromSurveyId": "2026-07-15",
+      "toSurveyId": "2026-09-10",
+      "status": "published",
+      "evidenceType": "measured",
+      "title": "Survey 4 to Survey 5",
+      "summary": "Measured sediment change across the approved fixed monitoring zones.",
+      "analysedAreaM2": 609384,
+      "coverage": "96.2% matching cells",
+      "confidence": "Measured review",
+      "viewerUrl": "./area8-change-viewer/index.html?embed=1",
+      "zones": [
+        { "id": "monitored", "label": "Monitored zone", "gainM3": 19.220632, "lossM3": 22223.794975, "netM3": -22204.574344, "summary": "Overall sediment lowering in the monitored zone." },
+        { "id": "central", "label": "Central", "gainM3": 93.906634, "lossM3": 24606.511891, "netM3": -24512.605258, "summary": "Overall sediment lowering in the central monitoring zone." },
+        { "id": "wadebridge", "label": "Wadebridge", "gainM3": 1659.884933, "lossM3": 7866.212399, "netM3": -6206.327466, "summary": "Overall sediment lowering in this monitoring zone." }
+      ],
+      "maps": [
+        { "kind": "height", "src": "./survey-data/coastal-change-demo/2026-09-10/area8/area8_D_vs_E_height_change_analysis.png", "title": "Height change analysis" },
+        { "kind": "classification", "src": "./survey-data/coastal-change-demo/2026-09-10/area8/area8_D_vs_E_gain_loss_classification.png", "title": "Sediment change classes" }
+      ]
+    },
+    {
+      "id": "c-e",
+      "fromSurveyId": "2026-06-16",
+      "toSurveyId": "2026-09-10",
+      "status": "unavailable",
+      "evidenceType": "not-published",
+      "title": "Survey 3 to Survey 5",
+      "summary": "This comparison is not published because its required classification export is incomplete."
+    },
+    {
+      "id": "a-f",
+      "fromSurveyId": "2026-03-22",
+      "toSurveyId": "2026-10-12",
+      "status": "pending-verification",
+      "evidenceType": "visual-preview",
+      "title": "Survey 1 to Survey 6",
+      "summary": "Provisional visual comparison export. No Scan 6 quantitative figures, zones, or approval claim are published.",
+      "maps": [
+        { "kind": "height", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_A_vs_F_height_change_analysis.png", "title": "Height change analysis" },
+        { "kind": "classification", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_A_vs_F_gain_loss_classification.png", "title": "Sediment change classes" }
+      ]
+    },
+    {
+      "id": "b-f",
+      "fromSurveyId": "2026-04-18",
+      "toSurveyId": "2026-10-12",
+      "status": "pending-verification",
+      "evidenceType": "visual-preview",
+      "title": "Survey 2 to Survey 6",
+      "summary": "Provisional visual comparison export. No Scan 6 quantitative figures, zones, or approval claim are published.",
+      "maps": [
+        { "kind": "height", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_B_vs_F_height_change_analysis.png", "title": "Height change analysis" },
+        { "kind": "classification", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_B_vs_F_gain_loss_classification.png", "title": "Sediment change classes" }
+      ]
+    },
+    {
+      "id": "c-f",
+      "fromSurveyId": "2026-06-16",
+      "toSurveyId": "2026-10-12",
+      "status": "pending-verification",
+      "evidenceType": "visual-preview",
+      "title": "Survey 3 to Survey 6",
+      "summary": "Provisional visual comparison export. No Scan 6 quantitative figures, zones, or approval claim are published.",
+      "maps": [
+        { "kind": "height", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_C_vs_F_height_change_analysis.png", "title": "Height change analysis" },
+        { "kind": "classification", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_C_vs_F_gain_loss_classification.png", "title": "Sediment change classes" }
+      ]
+    },
+    {
+      "id": "d-f",
+      "fromSurveyId": "2026-07-15",
+      "toSurveyId": "2026-10-12",
+      "status": "pending-verification",
+      "evidenceType": "visual-preview",
+      "title": "Survey 4 to Survey 6",
+      "summary": "Provisional visual comparison export. No Scan 6 quantitative figures, zones, or approval claim are published.",
+      "maps": [
+        { "kind": "height", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_D_vs_F_height_change_analysis.png", "title": "Height change analysis" },
+        { "kind": "classification", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_D_vs_F_gain_loss_classification.png", "title": "Sediment change classes" }
+      ]
+    },
+    {
+      "id": "e-f",
+      "fromSurveyId": "2026-09-10",
+      "toSurveyId": "2026-10-12",
+      "status": "pending-verification",
+      "evidenceType": "visual-preview",
+      "title": "Survey 5 to Survey 6",
+      "summary": "Provisional visual comparison export. No Scan 6 quantitative figures, zones, or approval claim are published.",
+      "pendingReason": "The visual map export is available, but the quantitative release provenance remains under review.",
+      "maps": [
+        { "kind": "height", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_E_vs_F_height_change_analysis.png", "title": "Height change analysis" },
+        { "kind": "classification", "src": "./survey-data/coastal-change-demo/2026-10-12/area8/area8_E_vs_F_gain_loss_classification.png", "title": "Sediment change classes" }
+      ]
+    }
+  ]
+}

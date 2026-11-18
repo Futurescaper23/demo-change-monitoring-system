@@ -91,6 +91,19 @@
             "end": "2026-09-12"
           },
           "notes": "Scan 5 Area 8 imagery, DSM, contours, section profiles, and available volumetric comparison maps are linked in the demo."
+        },
+        {
+          "id": "2026-10-12",
+          "label": "Survey Round 6 - 12 October 2026",
+          "shortDate": "12 Oct 2026",
+          "dateFrom": "2026-10-12",
+          "dateTo": "2026-10-12",
+          "status": "Survey imagery and sections loaded",
+          "readiness": "Area 8 imagery, elevation, contours, and sections linked; quantitative comparison pending verification",
+          "assetFolder": "2026-10-12",
+          "dataFolder": "2026-10-12",
+          "comparisonBaseline": "2026-09-10",
+          "notes": "Scan 6 is available for imagery, layer and section review. Quantitative change outputs are withheld pending provenance verification."
         }
       ],
       "surveyAreaOverrides": {
@@ -215,7 +228,7 @@
               "previewLabel": "Area 8 July Change Review",
               "previewBaselineCaption": "Plan-view height change surface for Area 8 between the June and July surveys across the current monitored setup.",
               "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 8 June-to-July comparison.",
-              "viewerEmbedUrl": "https://area8.vercel.app/",
+              "viewerEmbedUrl": "./area8-change-viewer/index.html?embed=1",
               "viewerTitle": "Area 8 3D Change Viewer",
               "viewerSummary": "Interactive terrain preview for Area 8 centred on the June-to-July comparison, with the other available survey-pair references now sitting alongside it in the same review flow.",
               "viewerStats": {
@@ -273,7 +286,7 @@
               "previewLabel": "Area 8 Scan 5 Change Review",
               "previewBaselineCaption": "Plan-view height change surface for Area 8 between the July and September surveys across the current monitored setup.",
               "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 8 July-to-September comparison.",
-              "viewerEmbedUrl": "https://area8.vercel.app/",
+              "viewerEmbedUrl": "./area8-change-viewer/index.html?embed=1",
               "viewerTitle": "Area 8 Scan 5 Change Viewer",
               "viewerSummary": "Interactive terrain preview for Area 8 centred on the available Scan 5 monitored comparisons, with the exported A/B/C/D-to-E map pairs available as supporting references.",
               "viewerStats": {

@@ -14,6 +14,9 @@ const port = Number(process.env.PORT || 3080);
 const WORLDTIDES_API_KEY = process.env.WORLDTIDES_API_KEY;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+// Deliberately opt-in and used only by the local launcher. Production ignores
+// persistent-user admin flags and continues to use its existing master secret.
+const LOCAL_DEVELOPMENT_AUTH = process.env.LOCAL_DEVELOPMENT_AUTH === "1";
 const TIDE_LATITUDE = environmentalContext.tide.latitude;
 const TIDE_LONGITUDE = environmentalContext.tide.longitude;
 const REPO_ACCESS_USERS_PATH = path.resolve(__dirname, "./data/access-users.json");
@@ -31,6 +34,7 @@ const mimeTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
+  ".mjs": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
@@ -141,6 +145,11 @@ http.createServer(async (request, response) => {
   }
 
   const requestPath = url.pathname === "/" ? "/index.html" : url.pathname;
+  if (requestPath === "/data/area8-trend-stats.json") {
+    response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    response.end("Not found");
+    return;
+  }
   const filePath = path.normalize(path.join(__dirname, requestPath));
 
   if (!filePath.startsWith(__dirname) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
@@ -516,12 +525,14 @@ async function handleSiteAuthLoginRequest(request, response) {
         return;
       }
       recordAccessUserLogin(users, matched);
+      const isLocalDevelopmentAdmin = LOCAL_DEVELOPMENT_AUTH && matched.isAdmin === true;
       authUser = {
         id: matched.id,
         username: matched.username,
         label: matched.label || matched.username,
         expiresAt: matched.expiresAt || null,
-        isMaster: false
+        isMaster: false,
+        isAdmin: isLocalDevelopmentAdmin
       };
     }
 
@@ -537,7 +548,7 @@ async function handleSiteAuthLoginRequest(request, response) {
       expiresAt: sessionExpiresAt,
       accessExpiresAt: authUser.expiresAt,
       isMaster: authUser.isMaster,
-      isAdmin: authUser.isMaster
+      isAdmin: authUser.isAdmin ?? authUser.isMaster
     });
 
     sendJson(
@@ -764,6 +775,7 @@ function sanitiseAccessUsers(users) {
       updatedAt: user.updatedAt || null,
       lastLoginAt: user.lastLoginAt || null,
       loginCount: Number(user.loginCount || 0),
+      isAdmin: LOCAL_DEVELOPMENT_AUTH && user.isAdmin === true,
       expired: Boolean(user.expiresAt && Date.parse(user.expiresAt) <= Date.now())
     }));
 }

@@ -321,28 +321,6 @@
           <div id="volumeImageryGrid" class="volume-imagery-grid section-gap"></div>
         </article>
 
-        <div class="two-col section-gap">
-          <article class="panel">
-            <p class="eyebrow">How To Read This Page</p>
-            <h2>Current Workflow</h2>
-            <div id="volumeMethod" class="detail-list section-gap"></div>
-          </article>
-          <article class="panel">
-            <p class="eyebrow">What This Means</p>
-            <h2>Current Interpretation</h2>
-            <div id="volumeNarrative" class="detail-list section-gap"></div>
-          </article>
-        </div>
-
-        <article class="panel section-gap">
-          <div class="panel-head">
-            <div>
-              <p class="eyebrow">Comparison Rollout</p>
-              <h2>What Is Ready</h2>
-            </div>
-          </div>
-          <div id="volumeAreaGrid" class="card-grid section-gap"></div>
-        </article>
       </section>
 
       <section class="tab-panel" data-panel="layers">
@@ -548,8 +526,18 @@
             <div id="volumeImageLightboxViewport" class="volume-image-lightbox__viewport">
               <img id="volumeImageLightboxImage" alt="">
             </div>
+            <div id="volumeImageLightboxCompareGrid" class="volume-image-lightbox__compare-grid hidden"></div>
             <aside id="volumeImageLightboxLegend" class="volume-image-lightbox__legend is-hidden"></aside>
           </div>
+        </article>
+      </div>
+
+      <div id="volumeComparePicker" class="volume-compare-picker hidden" aria-hidden="true">
+        <div id="volumeComparePickerBackdrop" class="volume-compare-picker__backdrop"></div>
+        <article class="volume-compare-picker__dialog" role="dialog" aria-modal="true" aria-labelledby="volumeComparePickerTitle">
+          <div class="volume-compare-picker__header"><div><p id="volumeComparePickerEyebrow" class="eyebrow">Reference map compare</p><h3 id="volumeComparePickerTitle">Choose maps to compare</h3><p id="volumeComparePickerCaption" class="muted">Pick between two and four maps, then open them together.</p></div><button id="volumeComparePickerClose" class="chip" type="button" aria-label="Close compare picker">Close</button></div>
+          <div id="volumeComparePickerGrid" class="volume-compare-picker__grid"></div>
+          <div class="volume-compare-picker__footer"><p id="volumeComparePickerStatus" class="muted">Choose at least two maps.</p><div class="volume-compare-picker__actions"><button id="volumeComparePickerReset" class="chip" type="button">Reset</button><button id="volumeComparePickerOpen" class="chip chip--primary" type="button">Compare Selected</button></div></div>
         </article>
       </div>
 
@@ -906,7 +894,7 @@
               "previewLabel": "Area 8 July Change Review",
               "previewBaselineCaption": "Plan-view height change surface for Area 8 between the June and July surveys across the current monitored setup.",
               "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 8 June-to-July comparison.",
-              "viewerEmbedUrl": "https://area8.vercel.app/",
+              "viewerEmbedUrl": "./area8-change-viewer/index.html?embed=1",
               "viewerTitle": "Area 8 3D Change Viewer",
               "viewerSummary": "Interactive terrain preview for Area 8 centred on the June-to-July comparison, with the other available survey-pair references now sitting alongside it in the same review flow.",
               "viewerStats": {
@@ -964,7 +952,7 @@
               "previewLabel": "Area 8 Scan 5 Change Review",
               "previewBaselineCaption": "Plan-view height change surface for Area 8 between the July and September surveys across the current monitored setup.",
               "previewCurrentCaption": "Simplified gain-and-loss classification for the same Area 8 July-to-September comparison.",
-              "viewerEmbedUrl": "https://area8.vercel.app/",
+              "viewerEmbedUrl": "./area8-change-viewer/index.html?embed=1",
               "viewerTitle": "Area 8 Scan 5 Change Viewer",
               "viewerSummary": "Interactive terrain preview for Area 8 centred on the available Scan 5 monitored comparisons, with the exported A/B/C/D-to-E map pairs available as supporting references.",
               "viewerStats": {
@@ -1041,8 +1029,12 @@
         if (window.location.protocol !== "file:") {
           const script = document.createElement("script");
           script.type = "module";
-          script.src = "./app.js?v=20260630a";
+          script.src = "./app.js?v=20260630c";
           document.body.appendChild(script);
+          const trendReview = document.createElement("script");
+          trendReview.type = "module";
+          trendReview.src = "./trend-animation/animation-component.mjs";
+          document.body.appendChild(trendReview);
           return;
         }
 

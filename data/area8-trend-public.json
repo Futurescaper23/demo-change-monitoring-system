@@ -1,0 +1,23 @@
+{
+  "schema_version": "public-1.0",
+  "area_label": "Monitoring reach",
+  "classification_threshold_m": 0.05,
+  "grid": { "resolution_m": 0.1, "crs": { "epsg": 27700, "name": "British National Grid", "vertical_datum": "ODN height" } },
+  "classification_inputs": {
+    "cumulative_pairs": [
+      { "pair": "A->D", "date_range": "22 Mar 2026 to 15 Jul 2026", "interval_days": 115, "volume_stats": { "net_volume_m3": 181.329448, "added_volume_m3": 1995.596172, "removed_volume_m3": 1814.266725, "matching_cells_percent": 96.05160280701423 } },
+      { "pair": "D->E", "date_range": "15 Jul 2026 to 10 Sep 2026", "interval_days": 57, "volume_stats": { "net_volume_m3": -52923.507068, "added_volume_m3": 1773.012199, "removed_volume_m3": 54696.519264999995, "matching_cells_percent": 96.18943515231778 } },
+      { "pair": "A->E", "date_range": "22 Mar 2026 to 10 Sep 2026", "interval_days": 172, "volume_stats": { "net_volume_m3": -52737.683026, "added_volume_m3": 1812.244338, "removed_volume_m3": 54549.927363999996, "matching_cells_percent": 96.1940321771518 } }
+    ]
+  },
+  "classified_area": { "valid_area_m2": 552031.2, "coverage_percent_of_boundary": 87.11458983072288 },
+  "trend_classes": [
+    { "key": "consistent_accretion", "label": "Consistent accretion", "area_m2": 195.69, "percent_of_classified_area": 0.03544908331268233, "color_rgba": [34, 94, 168, 255] },
+    { "key": "consistent_erosion", "label": "Consistent erosion", "area_m2": 231.66, "percent_of_classified_area": 0.041965019368470476, "color_rgba": [183, 28, 28, 255] },
+    { "key": "accretion_then_erosion", "label": "Accretion then erosion", "area_m2": 434.18, "percent_of_classified_area": 0.07865135159027244, "color_rgba": [123, 31, 162, 255] },
+    { "key": "erosion_then_accretion", "label": "Erosion then accretion", "area_m2": 379.26, "percent_of_classified_area": 0.06870263854651693, "color_rgba": [0, 121, 107, 255] },
+    { "key": "stable", "label": "Stable", "area_m2": 147344.73, "percent_of_classified_area": 26.691377226504585, "color_rgba": [189, 189, 189, 255] },
+    { "key": "new_latest_accretion", "label": "New/latest accretion", "area_m2": 9972.45, "percent_of_classified_area": 1.806501154282584, "color_rgba": [100, 181, 246, 255] },
+    { "key": "new_latest_erosion", "label": "New/latest erosion", "area_m2": 392974.87, "percent_of_classified_area": 71.18707602034088, "color_rgba": [239, 83, 80, 255] }
+  ]
+}

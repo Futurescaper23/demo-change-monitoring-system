@@ -70,6 +70,11 @@ import { volumeChangeSettings } from "./src/data/volumeChange.js?v=20260529g";
   volumeLightboxZoom: 1,
   volumeLightboxRotation: 0,
   volumeLightboxLegendItems: [],
+  volumeLightboxMode: "single",
+  volumeComparePickerItems: [],
+  volumeComparePickerSelected: [],
+  volumeComparisonId: null,
+  volumeZoneId: null,
   accessUsers: []
     };
 
@@ -78,10 +83,12 @@ const AREA_ENABLED_TOOLBAR_TABS = new Set(["panorama", "volume", "layers", "sect
 const SURVEY_MODEL_TABS = new Set(["overview", "areas", "weather", "panorama", "volume", "layers", "sections"]);
 const sandboxTrendPaths = {
   manifest: "./data/area8-trend-manifest.json",
-  stats: "./data/area8-trend-stats.json",
+  stats: "./data/area8-trend-public.json",
   image: "./assets/area8-trend-classification-panel.png"
 };
 let sandboxTrendCachePromise = null;
+const demoVolumeRegistryPath = "./data/volume-comparisons.json";
+let demoVolumeRegistryCachePromise = null;
 
 const SANDBOX_REFERENCE_PAIRS = [
   { pair: "A_vs_B", surveyId: "2026-07-15", title: "Survey 1 vs Survey 2", badge: "Comparison 1", window: "March to April" },
@@ -487,9 +494,6 @@ const els = {
   volumeTrendPanel: byId("volumeTrendPanel"),
   volumeTrendBody: byId("volumeTrendBody"),
   volumeImageSummary: byId("volumeImageSummary"),
-  volumeMethod: byId("volumeMethod"),
-  volumeNarrative: byId("volumeNarrative"),
-  volumeAreaGrid: byId("volumeAreaGrid"),
   volumeImageryGrid: byId("volumeImageryGrid"),
   volumeImageLightbox: byId("volumeImageLightbox"),
   volumeImageLightboxBackdrop: byId("volumeImageLightboxBackdrop"),
@@ -504,6 +508,17 @@ const els = {
   volumeImageLightboxZoomIn: byId("volumeImageLightboxZoomIn"),
   volumeImageLightboxZoomOut: byId("volumeImageLightboxZoomOut"),
   volumeImageLightboxReset: byId("volumeImageLightboxReset"),
+  volumeImageLightboxCompareGrid: byId("volumeImageLightboxCompareGrid"),
+  volumeComparePicker: byId("volumeComparePicker"),
+  volumeComparePickerBackdrop: byId("volumeComparePickerBackdrop"),
+  volumeComparePickerClose: byId("volumeComparePickerClose"),
+  volumeComparePickerEyebrow: byId("volumeComparePickerEyebrow"),
+  volumeComparePickerTitle: byId("volumeComparePickerTitle"),
+  volumeComparePickerCaption: byId("volumeComparePickerCaption"),
+  volumeComparePickerGrid: byId("volumeComparePickerGrid"),
+  volumeComparePickerStatus: byId("volumeComparePickerStatus"),
+  volumeComparePickerReset: byId("volumeComparePickerReset"),
+  volumeComparePickerOpen: byId("volumeComparePickerOpen"),
   viewerTitle: byId("viewerTitle"),
   layerWorkspace: byId("layerWorkspace"),
   primaryCompareSelect: byId("primaryCompareSelect"),
@@ -784,6 +799,8 @@ function normaliseAreaId(value) {
 function bindEvents() {
   els.surveySelect.addEventListener("change", () => {
     state.surveyId = els.surveySelect.value;
+    state.volumeComparisonId = null;
+    state.volumeZoneId = null;
     state.primarySurveyId = state.surveyId;
     state.secondarySurveyId = preferredSecondarySurveyId();
     state.sectionComparisonSurveyIds = mergeSectionComparisonSurveyIds(defaultSectionComparisonSurveyIds(), state.sectionComparisonSurveyIds);
@@ -942,6 +959,12 @@ function bindEvents() {
   els.sectionInsightOverlayClose.addEventListener("click", closeSectionInsightOverlay);
   els.sectionInsightOverlayBackdrop.addEventListener("click", closeSectionInsightOverlay);
   els.volumeImageryGrid?.addEventListener("click", (event) => {
+    const compareTrigger = event.target.closest("[data-volume-compare-items]");
+    if (compareTrigger) {
+      const items = parseVolumeCompareItems(compareTrigger.dataset.volumeCompareItems);
+      if (items.length) openVolumeComparePicker(compareTrigger.dataset.volumeCompareEyebrow || "Reference maps", compareTrigger.dataset.volumeCompareTitle || "Comparison set", compareTrigger.dataset.volumeCompareCaption || "", items);
+      return;
+    }
     const trigger = event.target.closest("[data-volume-lightbox-src]");
     if (!trigger) {
       return;
@@ -969,11 +992,33 @@ function bindEvents() {
       Number(trigger.dataset.volumeLightboxRotation || 0)
     );
   });
+  document.addEventListener("click", (event) => {
+    const comparisonButton = event.target.closest("[data-volume-comparison-id]");
+    if (comparisonButton) {
+      state.volumeComparisonId = comparisonButton.dataset.volumeComparisonId;
+      state.volumeZoneId = null;
+      renderVolume();
+      return;
+    }
+    const zoneButton = event.target.closest("[data-volume-zone-id]");
+    if (zoneButton) {
+      state.volumeZoneId = zoneButton.dataset.volumeZoneId;
+      renderVolume();
+    }
+  });
   els.volumeImageLightboxClose?.addEventListener("click", closeVolumeImageLightbox);
   els.volumeImageLightboxBackdrop?.addEventListener("click", closeVolumeImageLightbox);
   els.volumeImageLightboxZoomIn?.addEventListener("click", () => setVolumeImageLightboxZoom(state.volumeLightboxZoom * 1.2));
   els.volumeImageLightboxZoomOut?.addEventListener("click", () => setVolumeImageLightboxZoom(state.volumeLightboxZoom / 1.2));
   els.volumeImageLightboxReset?.addEventListener("click", () => setVolumeImageLightboxZoom(1));
+  els.volumeComparePickerClose?.addEventListener("click", closeVolumeComparePicker);
+  els.volumeComparePickerBackdrop?.addEventListener("click", closeVolumeComparePicker);
+  els.volumeComparePickerReset?.addEventListener("click", resetVolumeComparePickerSelection);
+  els.volumeComparePickerOpen?.addEventListener("click", openSelectedVolumeCompareItems);
+  els.volumeComparePickerGrid?.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-volume-compare-index]");
+    if (card) toggleVolumeComparePickerItem(Number.parseInt(card.dataset.volumeCompareIndex || "", 10));
+  });
   els.volumeImageLightboxViewport?.addEventListener("wheel", (event) => {
     if (els.volumeImageLightbox?.classList.contains("hidden")) {
       return;
@@ -1345,12 +1390,7 @@ function configuredOverviewHeroImage(surveyId) {
 
 function configuredSurveyModelUrl(surveyId) {
   const directMatch = projectConfig.branding?.niraModelsBySurvey?.[surveyId];
-  if (String(directMatch || "").trim()) {
-    return String(directMatch).trim();
-  }
-  const fallbackMatch = Object.values(projectConfig.branding?.niraModelsBySurvey || {})
-    .find((value) => String(value || "").trim());
-  return String(fallbackMatch || "").trim();
+  return String(directMatch || "").trim();
 }
 
 function renderShellStageAction(survey) {
@@ -3482,6 +3522,11 @@ async function renderVolumePrevious() {
 
 async function renderVolume() {
   const project = currentProject();
+  const selectedSurvey = currentSurvey();
+  if (selectedSurvey.id === "2026-10-12" && !currentVolumeDataset()) {
+    await renderPendingVolumeVerification(project, selectedSurvey, currentArea());
+    return;
+  }
   const sandboxComparisonEntries = Object.entries(project.volumeChangeComparisons || {})
     .filter(([, entry]) => entry?.areas?.[volumeChangeSettings.sandboxAreaId]);
   const sandboxComparisonEntry = sandboxComparisonEntries
@@ -3733,29 +3778,6 @@ async function renderVolume() {
       metric("Current area", area.label, area.overviewCode),
       metric("Next step", "Add the next survey", "Then upload the sandbar change results")
     ].join("");
-    els.volumeMethod.innerHTML = [
-      detail("How this will work", "Sandbar change is measured by comparing one elevation surface with another inside fixed sandbar polygons."),
-      detail("What goes into the app", "A simple preview image, plus clear added, removed, and overall balance figures for each measured sandbar.")
-    ].join("");
-    els.volumeNarrative.innerHTML = [
-      detail("Why this matters", "This page is here to show whether the estuary bars are building up, flattening out, or wearing away between survey rounds."),
-      detail("What people should see", "A simple visual preview first, followed by easy-to-read numbers that explain what changed.")
-    ].join("");
-    els.volumeAreaGrid.innerHTML = polygons.length
-      ? polygons.map((item) => `
-        <article class="card">
-          <p class="muted">${escapeHtml(area.overviewCode)} - ${escapeHtml(item.id || "")}</p>
-          <h3>${escapeHtml(item.label)}</h3>
-          <p>${escapeHtml(item.notes || "Measured sandbar polygon ready. Repeat-survey results will slot into this shape once the comparison is processed.")}</p>
-        </article>
-      `).join("")
-      : `
-        <article class="card">
-          <p class="muted">${escapeHtml(area.overviewCode)} - ${escapeHtml(area.label)}</p>
-          <h3>Awaiting first comparison dataset</h3>
-          <p>Once a repeat survey has been processed, this page will show per-sandbar added, removed, and overall balance figures for this area.</p>
-        </article>
-      `;
     return;
   }
 
@@ -3824,7 +3846,7 @@ async function renderVolume() {
           alt: `${area.label} ${survey.label} volume change context`,
           caption: previewCurrentCaption || `${area.label} with the measured change overlay shown against the later survey context.`
         }
-      ]);
+      ], { grouped: allReferenceMaps.length > 0 });
       els.volumeSummary.textContent = `${area.label} is being compared between ${baselineSurvey?.shortDate || baselineLabel} and ${survey.shortDate}. This setup pairs the measured totals with a live 3D viewer and the full supporting comparison-map set so the change is easier to interpret from different angles.`;
       els.volumeImageSummary.textContent = "The full Area 8 comparison package through Scan 5 is shown here: the height-change maps first, then the simpler gain-and-loss class maps. Click any image to open it full screen and zoom in.";
     } else {
@@ -3874,45 +3896,240 @@ async function renderVolume() {
       metric("Next step", "Add m3 values", "Enter added, removed, and overall balance per sandbar in admin")
     ].join("");
 
-  els.volumeMethod.innerHTML = `
-    <div class="volume-explainer">
-      <div class="volume-explainer__block">
-        <strong>What this page is doing now</strong>
-        <p>This page now combines three layers of evidence for ${escapeHtml(area.label)}: the interactive 3D comparison viewer, the longer-term trend map through Survey Round 5, and the flat reference maps underneath.</p>
-      </div>
-      <div class="volume-explainer__block">
-        <strong>How to read it in order</strong>
-        <p>Start with the 3D viewer for detailed shape change, use the trend panel to see whether movement is repeating or reversing across the full survey set, then use the six reference maps for a simpler side-by-side plan-view check.</p>
-      </div>
-      <div class="volume-explainer__block">
-        <strong>How the trend layer is built</strong>
-        <p>The trend panel is not just one before-and-after comparison. It looks across Survey 1, Survey 2, and Survey 3 together so we can separate steady build-up, steady lowering, and areas that changed direction over time.</p>
-      </div>
-      <div class="volume-explainer__block">
-        <strong>Current area note</strong>
-        <p>${escapeHtml(areaDataset?.notes || "Add a short plain-English note here to explain what changed in this part of the estuary.")}</p>
-      </div>
-    </div>
-  `;
+}
 
-  els.volumeNarrative.innerHTML = `
-    <div class="volume-explainer">
-      <div class="volume-explainer__block">
-        <strong>What is live right now</strong>
-        <p>The current live setup is strongest for Area 3 because that is where the three-round trend outputs, the hosted 3D viewer, and all three downloaded comparison map pairs have now been lined up together.</p>
-      </div>
-      <div class="volume-explainer__block">
-        <strong>What the client should take from it</strong>
-        <p>The top half of the page explains where the estuary appears to be repeatedly building up, repeatedly lowering, or changing direction between rounds. The lower reference maps then let people compare Survey 1 vs 2, Survey 1 vs 3, and Survey 2 vs 3 side by side without leaving the page.</p>
-      </div>
-      <div class="volume-explainer__block">
-        <strong>What comes next</strong>
-        <p>Any future areas can now use this same structure: 3D viewer at the top, trend summary in the middle, and a six-image comparison strip underneath with click-to-expand detail when needed.</p>
-      </div>
-    </div>
-  `;
+async function loadDemoVolumeRegistry() {
+  if (!demoVolumeRegistryCachePromise) {
+    demoVolumeRegistryCachePromise = fetch(demoVolumeRegistryPath)
+      .then((response) => response.ok ? response.json() : null)
+      .then((registry) => Array.isArray(registry?.comparisons) ? registry : null)
+      .catch(() => null);
+  }
+  return demoVolumeRegistryCachePromise;
+}
 
-  els.volumeAreaGrid.innerHTML = comparisonReadinessCards(trendData, area.label);
+function volumeStatusLabel(status) {
+  if (status === "published") return "Published";
+  if (status === "pending-verification") return "Pending verification";
+  return "Unavailable";
+}
+
+function volumeStatusDetail(status) {
+  if (status === "published") return "Approved client-facing evidence";
+  if (status === "pending-verification") return "Quantitative outputs withheld";
+  return "Not published in this demo";
+}
+
+function surveyLabelForVolume(project, surveyId) {
+  return project.surveys.find((survey) => survey.id === surveyId)?.shortDate || surveyId;
+}
+
+function comparisonIntervalDays(comparison) {
+  const from = Date.parse(`${comparison.fromSurveyId}T12:00:00Z`);
+  const to = Date.parse(`${comparison.toSurveyId}T12:00:00Z`);
+  return Number.isFinite(from) && Number.isFinite(to) ? Math.round((to - from) / 86400000) : null;
+}
+
+function comparisonMapCards(comparison) {
+  const interval = comparisonIntervalDays(comparison);
+  return (comparison.maps || []).map((map) => ({
+    eyebrow: map.kind === "height" ? "Elevation difference" : "Sediment classification",
+    title: map.title,
+    badge: comparison.title,
+    label: interval ? `${interval} day interval` : "Comparison map",
+    src: map.src,
+    alt: `${comparison.title} ${map.title}`,
+    caption: map.kind === "height"
+      ? "Plan-view surface-height difference for the published comparison."
+      : "Classification of observed sediment lowering and accumulation for the published comparison."
+  }));
+}
+
+function renderRegistryTrend(trendData, trend) {
+  if (!trendData) {
+    els.volumeTrendPanel.classList.add("is-hidden");
+    return;
+  }
+  const pairs = trendPairSummaries(trendData.stats);
+  const classes = sortedTrendClasses(trendData.stats.trend_classes || []);
+  state.volumeLightboxLegendItems = classes.map((item) => ({
+    label: item.label,
+    description: trendClassExplanation(item.key),
+    meta: `${formatSquareMetres(item.area_m2)} | ${fixed(item.percent_of_classified_area, 1)}% of classified area`,
+    color: `rgb(${item.color_rgba.slice(0, 3).join(",")})`
+  }));
+  els.volumeTrendPanel.classList.remove("is-hidden");
+  els.volumeTrendBody.innerHTML = `
+    <div class="volume-trend-callout">
+      <div class="volume-trend-callout__head">
+        <div>
+          <p class="eyebrow">Published long-term evidence</p>
+          <h3>${escapeHtml(trend.coverage)}</h3>
+        </div>
+        <p class="volume-trend-meta">${escapeHtml(trend.scope)}</p>
+      </div>
+      <p>${escapeHtml(trend.note)}</p>
+    </div>
+    <div class="volume-trend-pairs">
+      ${pairs.map((pair) => `
+        <article class="volume-trend-pair-card">
+          <p class="eyebrow">${escapeHtml(pair.label)}</p>
+          <h3>${escapeHtml(pair.readoutTitle)}</h3>
+          <p>${escapeHtml(pair.readoutCopy)}</p>
+          <p class="muted">${escapeHtml(pair.supportingCopy)}</p>
+        </article>
+      `).join("")}
+    </div>
+    <figure class="volume-trend-map">
+      <button class="volume-trend-map__button" type="button"
+        data-volume-lightbox-src="${escapeAttr(trendData.imageSrc)}"
+        data-volume-lightbox-eyebrow="Published trend analysis"
+        data-volume-lightbox-title="Survey Rounds 1 to 5 trend"
+        data-volume-lightbox-caption="Approved long-term classification. Survey Round 6 is not included."
+        data-volume-lightbox-alt="Published sediment trend classification map"
+        data-volume-lightbox-legend="trend-map">
+        <div class="volume-trend-map__stage"><img src="${escapeAttr(trendData.imageSrc)}" alt="Published sediment trend classification map"></div>
+      </button>
+      <figcaption class="muted">A separate long-term view of the approved Survey 1 to 5 monitoring scope.</figcaption>
+    </figure>
+  `;
+}
+
+async function renderRegistryVolume(registry) {
+  const project = currentProject();
+  const selectedSurvey = currentSurvey();
+  const comparisons = registry.comparisons;
+  const selectedComparison = comparisons.find((item) => item.id === state.volumeComparisonId)
+    || comparisons.find((item) => item.toSurveyId === selectedSurvey.id)
+    || comparisons.find((item) => item.status === "published" && item.evidenceType === "measured")
+    || comparisons[0];
+  if (!selectedComparison) return;
+  state.volumeComparisonId = selectedComparison.id;
+  const zones = Array.isArray(selectedComparison.zones) ? selectedComparison.zones : [];
+  const selectedZone = zones.find((zone) => zone.id === state.volumeZoneId) || zones[0] || null;
+  state.volumeZoneId = selectedZone?.id || null;
+  const fromLabel = surveyLabelForVolume(project, selectedComparison.fromSurveyId);
+  const toLabel = surveyLabelForVolume(project, selectedComparison.toSurveyId);
+  const interval = comparisonIntervalDays(selectedComparison);
+  const isMeasured = selectedComparison.status === "published" && selectedComparison.evidenceType === "measured";
+  const trendData = await loadSandboxTrendData();
+
+  els.volumeSandboxBanner.innerHTML = `
+    <strong>Evidence-led sediment monitoring</strong>
+    <p>${escapeHtml(volumeStatusLabel(selectedComparison.status))}: ${escapeHtml(selectedComparison.title)}. ${escapeHtml(volumeStatusDetail(selectedComparison.status))}.</p>
+  `;
+  els.volumeSummary.textContent = isMeasured
+    ? `${selectedComparison.title} compares ${fromLabel} with ${toLabel}. Select a monitoring zone to understand where sediment accumulated or was removed.`
+    : selectedComparison.summary;
+  els.volumeMetricGrid.classList.remove("is-hidden");
+  els.volumeMetricGrid.innerHTML = isMeasured && selectedZone ? [
+    metric("Sediment accumulated", formatVolume(selectedZone.gainM3), "Material added in the later survey"),
+    metric("Sediment removed", formatVolume(selectedZone.lossM3), "Material lowered in the later survey"),
+    metric("Net change", formatVolume(selectedZone.netM3), selectedZone.netM3 >= 0 ? "Overall build-up" : "Overall lowering"),
+    metric("Evidence status", selectedComparison.confidence || "Published", selectedComparison.coverage || "Approved comparison")
+  ].join("") : [
+    metric("Comparison", selectedComparison.title, `${fromLabel} to ${toLabel}`),
+    metric("Status", volumeStatusLabel(selectedComparison.status), volumeStatusDetail(selectedComparison.status)),
+    metric("Interval", interval ? `${interval} days` : "Not published", "Survey dates"),
+    metric("Quantitative result", "Not published", "No figures are inferred")
+  ].join("");
+
+  const showViewer = isMeasured && Boolean(selectedComparison.viewerUrl);
+  els.volumeViewerPanel.classList.toggle("is-hidden", !showViewer);
+  if (showViewer) {
+    els.volumeViewerTitle.textContent = "Existing 3D review viewer";
+    els.volumeViewerSummary.textContent = `${selectedComparison.title} retains the existing demonstration viewer. Use the published maps and figures on this page as the authoritative quantitative evidence.`;
+    els.volumeViewerGuide.innerHTML = detail("Viewing context", "Orbit and zoom to review terrain form. This viewer is available only for established published comparisons and is not used for Survey Round 6.");
+    els.volumeViewerFrame.src = selectedComparison.viewerUrl;
+    els.volumeViewerStats.classList.add("is-hidden");
+    els.volumeViewerDetails.innerHTML = detail("Evidence boundary", "The figures and methodology shown below are the approved reporting record for this comparison.");
+  } else {
+    els.volumeViewerFrame.removeAttribute("src");
+  }
+
+  renderRegistryTrend(trendData, registry.trend);
+  const mapCards = comparisonMapCards(selectedComparison);
+  if (mapCards.length) {
+    els.volumeImageSummary.textContent = "Compare the elevation-difference and sediment-classification maps side by side. Select either map to inspect it in detail.";
+    renderVolumeReferenceGallery(mapCards);
+  } else if (selectedComparison.status === "pending-verification") {
+    const currentImage = await resolveExistingAsset(surveyAssetCandidates(project.id, selectedSurvey.id, volumeChangeSettings.sandboxAreaId, "ortho.jpg"));
+    els.volumeImageSummary.textContent = "Survey Round 6 aerial evidence is available; no quantitative comparison map is published.";
+    renderVolumeReferenceGallery(currentImage ? [{
+      eyebrow: "Current aerial evidence", title: toLabel, badge: "Survey Round 6", label: "Visual review only", src: currentImage,
+      alt: "Survey Round 6 aerial view", caption: "Use Compare and Sections for visual review while quantitative outputs remain pending verification."
+    }] : []);
+  } else {
+    els.volumeImageSummary.textContent = "No client-facing comparison maps are published for this selection.";
+    renderVolumeReferenceGallery([]);
+  }
+
+}
+
+async function renderPendingVolumeVerification(project, survey, area) {
+  const baselineSurvey = activeComparisonSurvey(project, survey);
+  const currentImageSrc = await resolveExistingAsset(
+    surveyAssetCandidates(project.id, survey.id, area.id, "ortho.jpg")
+  );
+
+  const hasHistoricalArea8Review = area.id === volumeChangeSettings.sandboxAreaId;
+  if (hasHistoricalArea8Review) {
+    els.volumeViewerPanel.classList.remove("is-hidden");
+    els.volumeViewerTitle.textContent = "Historical Area 8 3D Sediment Change";
+    els.volumeViewerSummary.textContent = "Use the established 3D review viewer for the approved historical Area 8 comparisons through Survey Round 5. Survey Round 6 is not included in this viewer.";
+    els.volumeViewerGuide.innerHTML = detail(
+      "Historical comparison only",
+      "Orbit, zoom, and inspect the existing A→E terrain-change visualisation. It is retained for context and does not create a Scan F comparison or volume claim."
+    );
+    els.volumeViewerFrame.src = "./area8-change-viewer/index.html?embed=1";
+    els.volumeViewerStats.classList.add("is-hidden");
+    els.volumeViewerDetails.innerHTML = detail(
+      "Evidence boundary",
+      "This viewer is the established historical Area 8 sandbar review. Survey Round 6 quantitative and three-zone change outputs remain withheld pending verification."
+    );
+
+    // The self-mounting operational animation module observes this visible
+    // panel and adds the A→E review timeline above this preserved context.
+    els.volumeTrendPanel.classList.remove("is-hidden");
+    els.volumeTrendBody.innerHTML = `
+      <div class="volume-trend-callout">
+        <p class="eyebrow">Historical review context</p>
+        <h3>Area 8 sediment change through Survey Round 5</h3>
+        <p>The timeline above contains the experimental A→B through D→E display frames. Survey Round 6 is not included and no E→F figures or zone results are shown.</p>
+      </div>
+    `;
+  } else {
+    els.volumeViewerPanel.classList.add("is-hidden");
+    els.volumeViewerFrame.removeAttribute("src");
+    els.volumeTrendPanel.classList.add("is-hidden");
+    els.volumeTrendBody.innerHTML = "";
+  }
+  els.volumeMetricGrid.classList.remove("is-hidden");
+  els.volumeSandboxBanner.innerHTML = `
+    <strong>Demo Preview - ${escapeHtml(area.overviewCode)}</strong>
+    <p>Survey Round 6 imagery and sections are available. Quantitative change outputs are not published in this demo while their provenance is being verified.</p>
+  `;
+  els.volumeSummary.textContent = `${survey.label} can be reviewed against ${baselineSurvey?.shortDate || "the previous survey"} using the imagery and section tools. Measured change figures and comparison maps are pending verification.`;
+  const [historicReferenceMaps, scanSixReferenceMaps] = await Promise.all([
+    loadSandboxReferenceMaps(project.id, area.id),
+    loadScanSixReferenceMaps(survey.id, area.id)
+  ]);
+  const allReferenceMaps = [...historicReferenceMaps, ...scanSixReferenceMaps];
+  els.volumeImageSummary.textContent = scanSixReferenceMaps.length
+    ? "Historical reference maps and all available Scan 6 visual comparison exports are shown below. Scan 6 maps are provisional visual evidence only; quantitative figures, zones, and scientific approval remain withheld."
+    : historicReferenceMaps.length
+    ? "Published historic reference maps through Survey Round 5 are available below. Survey Round 6 imagery remains available in the Imagery, Compare and Sections tabs; its quantitative maps are withheld pending verification."
+    : "The current aerial image is shown for visual context only; no quantitative change claim is being made for this round.";
+  renderVolumeReferenceGallery(allReferenceMaps.length ? allReferenceMaps : (currentImageSrc ? [{
+    eyebrow: "Current aerial view", title: survey.shortDate, badge: "Survey Round 6", label: area.label, src: currentImageSrc,
+    alt: `${area.label} ${survey.label} aerial view`, caption: `${area.label} in ${survey.label}. Use the Compare and Sections tools for client-safe visual review while measured change outputs remain under verification.`
+  }] : []), { grouped: allReferenceMaps.length > 0 });
+  els.volumeMetricGrid.innerHTML = [
+    metric("Selected survey", survey.shortDate, "Current round"),
+    metric("Comparison status", "Pending verification", "Quantitative outputs withheld"),
+    metric("Available evidence", "Imagery and sections", "Aerial, elevation, contours, and profiles"),
+    metric("3D viewer", hasHistoricalArea8Review ? "Historical A→E viewer" : "Unavailable", hasHistoricalArea8Review ? "Survey Round 6 is excluded" : "No verified hosted Scan F model link")
+  ].join("");
 }
 
 async function renderAdmin() {
@@ -5476,6 +5693,7 @@ async function loadSandboxReferenceMaps(projectId, areaId) {
     const packageLabel = item.surveyId === "2026-09-10" ? "September Scan 5" : "July";
     const [heightCard, classCard] = await Promise.all([
       resolveExistingAsset([heightPath]).then((src) => src ? {
+        group: "height",
         eyebrow: "Height change analysis",
         title: item.title,
         badge: item.badge,
@@ -5485,6 +5703,7 @@ async function loadSandboxReferenceMaps(projectId, areaId) {
         caption: `${item.title} height change map for the Area 8 ${packageLabel} package. Use this to see where the later survey sits higher or lower across the measured footprint.`
       } : null),
       resolveExistingAsset([classPath]).then((src) => src ? {
+        group: "classification",
         eyebrow: "Gain and loss classes",
         title: item.title,
         badge: item.badge,
@@ -5502,11 +5721,35 @@ async function loadSandboxReferenceMaps(projectId, areaId) {
   ];
 }
 
+async function loadScanSixReferenceMaps(surveyId, areaId) {
+  const registry = await loadDemoVolumeRegistry();
+  if (!registry || areaId !== volumeChangeSettings.sandboxAreaId) return [];
+  const scanSixComparisons = registry.comparisons.filter((comparison) => comparison.toSurveyId === surveyId);
+  const cards = await Promise.all(scanSixComparisons.flatMap((comparison) => (comparison.maps || []).map(async (map) => {
+    const src = await resolveExistingAsset([map.src]);
+    if (!src) return null;
+    const isHeight = map.kind === "height";
+    return {
+      group: isHeight ? "height" : "classification",
+      eyebrow: isHeight ? "Scan 6 height-change review" : "Scan 6 gain and loss review",
+      title: comparison.title,
+      badge: "Provisional visual export",
+      label: "Quantitative results withheld",
+      src,
+      alt: `${areaId} ${comparison.title} ${map.title}`,
+      caption: `${comparison.title} ${isHeight ? "height-change" : "gain/loss"} map. This is a visual Scan 6 export only; volume figures, zones, and scientific approval remain withheld.`
+    };
+  })));
+  return cards.filter(Boolean);
+}
+
 function renderVolumeReferenceGallery(cards, options = {}) {
   const validCards = cards.filter((item) => item?.src);
   const single = options.single ?? validCards.length === 1;
+  const grouped = options.grouped ?? validCards.some((item) => item?.group);
   els.volumeImageryGrid.classList.toggle("volume-imagery-grid--single", single);
   els.volumeImageryGrid.classList.toggle("volume-imagery-grid--gallery", validCards.length > 2);
+  els.volumeImageryGrid.classList.toggle("volume-imagery-grid--grouped", grouped && !single);
 
   if (!validCards.length) {
     els.volumeImageryGrid.innerHTML = `
@@ -5518,7 +5761,7 @@ function renderVolumeReferenceGallery(cards, options = {}) {
     return;
   }
 
-  els.volumeImageryGrid.innerHTML = validCards.map((item) => `
+  const renderCard = (item) => `
     <figure class="volume-reference-card">
       <button
         class="volume-reference-card__button"
@@ -5545,7 +5788,100 @@ function renderVolumeReferenceGallery(cards, options = {}) {
         </div>
       </figcaption>
     </figure>
-  `).join("");
+  `;
+
+  if (grouped && !single) {
+    const groups = [
+      { key: "height", title: "Height change analysis", copy: "Plan-view height-difference exports for each available survey comparison." },
+      { key: "classification", title: "Gain and loss classes", copy: "Simplified gain/loss class views for the same comparison set." }
+    ].map((group) => ({ ...group, items: validCards.filter((item) => item.group === group.key) })).filter((group) => group.items.length);
+    els.volumeImageryGrid.innerHTML = groups.map((group) => `
+      <section class="volume-reference-group"><div class="volume-reference-group__head"><div><p class="eyebrow">${escapeHtml(group.title)}</p><h3>${escapeHtml(group.title)}</h3><p class="muted">${escapeHtml(group.copy)}</p></div>
+      <button class="chip volume-reference-group__compare" type="button" data-volume-compare-eyebrow="${escapeAttr(group.title)}" data-volume-compare-title="${escapeAttr(`${group.title} - ${currentArea()?.label || "Area"}`)}" data-volume-compare-caption="${escapeAttr(`Choose any two to four of the ${group.items.length} ${group.title.toLowerCase()} thumbnail maps for side-by-side review.`)}" data-volume-compare-items="${escapeAttr(JSON.stringify(group.items.map((item) => ({ src: item.src, title: item.title || "Reference image", alt: item.alt || item.title || "Reference image", label: item.label || item.badge || item.title || "Reference image" }))))}">Select 2–4 Maps to Compare</button></div>
+      <div class="volume-reference-group__grid">${group.items.map(renderCard).join("")}</div></section>
+    `).join("");
+    return;
+  }
+  els.volumeImageryGrid.innerHTML = validCards.map(renderCard).join("");
+}
+
+function parseVolumeCompareItems(rawValue) {
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item === "object" && item.src).map((item) => ({
+      src: String(item.src), title: String(item.title || "Reference image"), alt: String(item.alt || item.title || "Reference image"), label: String(item.label || item.title || "Reference image")
+    })) : [];
+  } catch { return []; }
+}
+
+function renderVolumeComparePicker() {
+  if (!els.volumeComparePickerGrid || !els.volumeComparePickerStatus || !els.volumeComparePickerOpen) return;
+  const selected = new Set(state.volumeComparePickerSelected);
+  els.volumeComparePickerGrid.innerHTML = state.volumeComparePickerItems.map((item, index) => {
+    const isSelected = selected.has(index);
+    const selectionOrder = state.volumeComparePickerSelected.indexOf(index) + 1;
+    return `<button class="volume-compare-picker__card ${isSelected ? "is-selected" : ""}" type="button" data-volume-compare-index="${index}" aria-pressed="${isSelected ? "true" : "false"}"><div class="volume-compare-picker__thumb"><img src="${escapeAttr(item.src)}" alt="${escapeAttr(item.alt)}"></div><div class="volume-compare-picker__meta"><div class="volume-compare-picker__meta-head"><strong>${escapeHtml(item.label)}</strong><span class="volume-compare-picker__selection">${isSelected ? `Selected ${selectionOrder}` : "Select"}</span></div><span>${escapeHtml(item.title)}</span></div></button>`;
+  }).join("");
+  const count = state.volumeComparePickerSelected.length;
+  els.volumeComparePickerStatus.textContent = count < 2 ? "Choose two to four thumbnail maps to compare." : count === 4 ? "Four maps selected. Compare is ready." : `${count} maps selected. You can add up to ${4 - count} more.`;
+  els.volumeComparePickerOpen.disabled = count < 2;
+}
+
+function openVolumeComparePicker(eyebrow, title, caption, items = []) {
+  if (!items.length || !els.volumeComparePicker) return;
+  state.volumeComparePickerItems = items;
+  state.volumeComparePickerSelected = [];
+  els.volumeComparePickerEyebrow.textContent = eyebrow;
+  els.volumeComparePickerTitle.textContent = title;
+  els.volumeComparePickerCaption.textContent = caption || "Choose two to four thumbnail maps from the full set, then open them together.";
+  renderVolumeComparePicker();
+  els.volumeComparePicker.classList.remove("hidden");
+  els.volumeComparePicker.setAttribute("aria-hidden", "false");
+  document.body.classList.add("volume-lightbox-open");
+}
+
+function closeVolumeComparePicker() {
+  if (!els.volumeComparePicker) return;
+  els.volumeComparePicker.classList.add("hidden");
+  els.volumeComparePicker.setAttribute("aria-hidden", "true");
+  state.volumeComparePickerItems = [];
+  state.volumeComparePickerSelected = [];
+  els.volumeComparePickerGrid.innerHTML = "";
+  if (els.volumeImageLightbox?.classList.contains("hidden")) document.body.classList.remove("volume-lightbox-open");
+}
+
+function resetVolumeComparePickerSelection() { state.volumeComparePickerSelected = []; renderVolumeComparePicker(); }
+
+function toggleVolumeComparePickerItem(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= state.volumeComparePickerItems.length) return;
+  const selected = new Set(state.volumeComparePickerSelected);
+  if (selected.has(index)) selected.delete(index); else { if (selected.size >= 4) return; selected.add(index); }
+  state.volumeComparePickerSelected = Array.from(selected).sort((a, b) => a - b);
+  renderVolumeComparePicker();
+}
+
+function openSelectedVolumeCompareItems() {
+  const items = state.volumeComparePickerSelected.map((index) => state.volumeComparePickerItems[index]).filter(Boolean);
+  if (items.length < 2) return renderVolumeComparePicker();
+  const eyebrow = els.volumeComparePickerEyebrow?.textContent || "Reference maps";
+  const title = els.volumeComparePickerTitle?.textContent || "Comparison set";
+  const caption = els.volumeComparePickerCaption?.textContent || "";
+  closeVolumeComparePicker();
+  openVolumeImageLightboxCompare(eyebrow, title, caption, items);
+}
+
+function renderVolumeImageLightboxCompareGrid(items = []) {
+  if (!els.volumeImageLightboxCompareGrid || !els.volumeImageLightboxViewport) return;
+  if (!items.length) {
+    els.volumeImageLightboxCompareGrid.classList.add("hidden");
+    els.volumeImageLightboxCompareGrid.innerHTML = "";
+    els.volumeImageLightboxViewport.classList.remove("hidden");
+    return;
+  }
+  els.volumeImageLightboxViewport.classList.add("hidden");
+  els.volumeImageLightboxCompareGrid.classList.remove("hidden");
+  els.volumeImageLightboxCompareGrid.innerHTML = items.map((item) => `<figure class="volume-image-lightbox__compare-item"><figcaption class="volume-image-lightbox__compare-label">${escapeHtml(item.label)}</figcaption><div class="volume-image-lightbox__compare-frame"><img src="${escapeAttr(item.src)}" alt="${escapeAttr(item.alt)}"></div></figure>`).join("");
 }
 
 function renderVolumeReferenceSelector(activeKey = "ab", availableKeys = []) {
@@ -5567,46 +5903,6 @@ function renderVolumeReferenceSelector(activeKey = "ab", availableKeys = []) {
       </span>
     `;
   }).join("");
-}
-
-function comparisonReadinessCards(trendData, areaLabel) {
-  const pairSummaries = trendData ? trendPairSummaries(trendData.stats) : [];
-  const rollout = [
-    {
-      key: "ab",
-      label: "Survey 1 vs Survey 2",
-      status: "Live now",
-      detail: "3D viewer, trend summary, and both supporting reference maps are now in place for this first comparison pair.",
-      note: pairSummaries[0]?.supportingCopy || "Reference maps loaded."
-    },
-    {
-      key: "ac",
-      label: "Survey 1 vs Survey 3",
-      status: "Live now",
-      detail: `The longer-gap comparison is now live as both a 3D view and a flat reference-map pair for ${areaLabel}.`,
-      note: pairSummaries[1]?.supportingCopy || "Reference maps loaded."
-    },
-    {
-      key: "bc",
-      label: "Survey 2 vs Survey 3",
-      status: "Live now",
-      detail: `The short late-season comparison is now live as both a 3D view and a flat reference-map pair for ${areaLabel}.`,
-      note: pairSummaries[2]?.supportingCopy || "Reference maps loaded."
-    }
-  ];
-  return rollout.map((item) => `
-    <article class="card volume-breakdown-card">
-      <div class="volume-card__meta">
-        <div>
-          <p class="muted">${escapeHtml(areaLabel)}</p>
-          <h3>${escapeHtml(item.label)}</h3>
-        </div>
-      </div>
-      <p class="volume-rollout-status">${escapeHtml(item.status)}</p>
-      <p>${escapeHtml(item.detail)}</p>
-      <p class="muted">${escapeHtml(item.note)}</p>
-    </article>
-  `).join("");
 }
 
 function sortedTrendClasses(items) {
@@ -7403,6 +7699,9 @@ function openVolumeImageLightbox(eyebrow, title, caption, src, alt, legendItems 
   if (!src || !els.volumeImageLightbox) {
     return;
   }
+  closeVolumeComparePicker();
+  state.volumeLightboxMode = "single";
+  renderVolumeImageLightboxCompareGrid([]);
   els.volumeImageLightboxEyebrow.textContent = eyebrow;
   els.volumeImageLightboxTitle.textContent = title;
   els.volumeImageLightboxCaption.textContent = caption;
@@ -7419,6 +7718,22 @@ function openVolumeImageLightbox(eyebrow, title, caption, src, alt, legendItems 
   els.volumeImageLightboxViewport.scrollLeft = 0;
 }
 
+function openVolumeImageLightboxCompare(eyebrow, title, caption, items = []) {
+  if (!items.length || !els.volumeImageLightbox) return;
+  closeVolumeComparePicker();
+  state.volumeLightboxMode = "compare";
+  els.volumeImageLightboxEyebrow.textContent = eyebrow;
+  els.volumeImageLightboxTitle.textContent = title;
+  els.volumeImageLightboxCaption.textContent = caption;
+  els.volumeImageLightboxImage.removeAttribute("src");
+  els.volumeImageLightboxContent?.classList.remove("has-legend");
+  renderVolumeImageLightboxLegend([]);
+  renderVolumeImageLightboxCompareGrid(items);
+  els.volumeImageLightbox.classList.remove("hidden");
+  els.volumeImageLightbox.setAttribute("aria-hidden", "false");
+  document.body.classList.add("volume-lightbox-open");
+}
+
 function closeVolumeImageLightbox() {
   if (!els.volumeImageLightbox) {
     return;
@@ -7426,6 +7741,8 @@ function closeVolumeImageLightbox() {
   els.volumeImageLightbox.classList.add("hidden");
   els.volumeImageLightbox.setAttribute("aria-hidden", "true");
   els.volumeImageLightboxImage.removeAttribute("src");
+  renderVolumeImageLightboxCompareGrid([]);
+  state.volumeLightboxMode = "single";
   renderVolumeImageLightboxLegend([]);
   els.volumeImageLightboxContent?.classList.remove("has-legend");
   document.body.classList.remove("volume-lightbox-open");

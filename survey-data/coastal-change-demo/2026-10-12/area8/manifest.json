@@ -1,0 +1,25 @@
+{
+  "projectId": "coastal-change-demo",
+  "surveyId": "2026-10-12",
+  "areaId": "area8",
+  "expectedFiles": [
+    "ortho.png",
+    "dsm.png",
+    "contours.png",
+    "section_profiles.csv"
+  ],
+  "presentFiles": [
+    "ortho.png",
+    "dsm.png",
+    "contours.png",
+    "section_profiles.csv"
+  ],
+  "missingFiles": [],
+  "sharedPresentFiles": [
+    "section_lines.png"
+  ],
+  "sharedMissingFiles": [],
+  "comparisonFiles": [],
+  "status": "complete",
+  "notes": "Client-safe Scan F imagery and section assets only. Quantitative comparison outputs are pending provenance verification."
+}
