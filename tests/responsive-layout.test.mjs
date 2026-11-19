@@ -37,8 +37,10 @@ assert.match(lightboxContent, /overscroll-behavior: contain/);
 assert.match(styles, /\.volume-image-lightbox__compare-grid \{[^}]*grid-template-columns: repeat\(2,minmax\(0,1fr\)\)/);
 assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.volume-image-lightbox__compare-grid \{ grid-template-columns:1fr; \}/);
 
-assert.match(styles, /@media \(min-width: 721px\) and \(max-height: 1020px\)/);
-assert.match(styles, /min-height: clamp\(520px, calc\(100dvh - 190px\), 760px\)/);
+assert.match(styles, /--hero-height: calc\(100dvh - 36px\)/);
+assert.match(styles, /height: var\(--hero-height\)/);
+assert.match(styles, /grid-template-rows: repeat\(7, minmax\(0, 1fr\)\)/);
+assert.match(styles, /height: min\(504px, calc\(100dvh - var\(--hero-nav-top\) - var\(--hero-nav-bottom-gap\)\)\)/);
 assert.match(styles, /object-fit: contain/);
 
 console.log("responsive layout checks passed");
