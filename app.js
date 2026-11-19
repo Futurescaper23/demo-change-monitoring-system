@@ -74,6 +74,8 @@ import { volumeChangeSettings } from "./src/data/volumeChange.js?v=20260529g";
   volumeLightboxMode: "single",
   volumeComparePickerItems: [],
   volumeComparePickerSelected: [],
+  volumeReferenceGallerySignature: "",
+  volumeComparePickerSignature: "",
   volumeComparisonId: null,
   volumeZoneId: null,
   accessUsers: [],
@@ -103,7 +105,6 @@ const SANDBOX_REFERENCE_PAIRS = [
   { pair: "B_vs_D", surveyId: "2026-07-15", title: "Survey 2 vs Survey 4", badge: "Comparison 6", window: "April to July" },
   { pair: "B_vs_E", surveyId: "2026-09-10", title: "Survey 2 vs Survey 5", badge: "Comparison 7", window: "April to September" },
   { pair: "C_vs_D", surveyId: "2026-07-15", title: "Survey 3 vs Survey 4", badge: "Comparison 8", window: "June to July" },
-  { pair: "C_vs_E", surveyId: "2026-09-10", title: "Survey 3 vs Survey 5", badge: "Comparison 9", window: "June to September" },
   { pair: "D_vs_E", surveyId: "2026-09-10", title: "Survey 4 vs Survey 5", badge: "Comparison 10", window: "July to September" }
 ];
 
@@ -5789,6 +5790,7 @@ async function loadSandboxReferenceMaps(projectId, areaId) {
         badge: item.badge,
         label: item.window,
         src,
+        thumbnailSrc: referenceMapThumbnailPath(src),
         alt: `${areaId} ${item.title} height change analysis`,
         caption: `${item.title} height change map for the Area 8 ${packageLabel} package. Use this to see where the later survey sits higher or lower across the measured footprint.`
       } : null),
@@ -5799,6 +5801,7 @@ async function loadSandboxReferenceMaps(projectId, areaId) {
         badge: item.badge,
         label: item.window,
         src,
+        thumbnailSrc: referenceMapThumbnailPath(src),
         alt: `${areaId} ${item.title} gain and loss classification`,
         caption: `${item.title} simplified class map for the Area 8 ${packageLabel} package. This is the flatter client-facing read of the same comparison.`
       } : null)
@@ -5826,6 +5829,7 @@ async function loadScanSixReferenceMaps(surveyId, areaId) {
       badge: "Provisional visual export",
       label: "Quantitative results withheld",
       src,
+      thumbnailSrc: referenceMapThumbnailPath(src),
       alt: `${areaId} ${comparison.title} ${map.title}`,
       caption: `${comparison.title} ${isHeight ? "height-change" : "gain/loss"} map. This is a visual Scan 6 export only; volume figures, zones, and scientific approval remain withheld.`
     };
@@ -5840,6 +5844,14 @@ function renderVolumeReferenceGallery(cards, options = {}) {
   els.volumeImageryGrid.classList.toggle("volume-imagery-grid--single", single);
   els.volumeImageryGrid.classList.toggle("volume-imagery-grid--gallery", validCards.length > 2);
   els.volumeImageryGrid.classList.toggle("volume-imagery-grid--grouped", grouped && !single);
+
+  const signature = JSON.stringify({
+    single,
+    grouped,
+    cards: validCards.map((item) => [item.src, item.thumbnailSrc || item.src, item.title, item.label, item.group, item.badge, item.caption])
+  });
+  if (signature === state.volumeReferenceGallerySignature) return;
+  state.volumeReferenceGallerySignature = signature;
 
   if (!validCards.length) {
     els.volumeImageryGrid.innerHTML = `
@@ -5863,7 +5875,7 @@ function renderVolumeReferenceGallery(cards, options = {}) {
         data-volume-lightbox-alt="${escapeAttr(item.alt || item.title || "Reference image")}"
       >
         <div class="volume-reference-stage">
-          <img loading="lazy" decoding="async" src="${escapeAttr(item.src)}" alt="${escapeAttr(item.alt || item.title || "Reference image")}">
+          <img loading="lazy" decoding="async" fetchpriority="low" width="500" height="397" src="${escapeAttr(item.thumbnailSrc || item.src)}" alt="${escapeAttr(item.alt || item.title || "Reference image")}">
         </div>
       </button>
       <figcaption class="volume-reference-card__meta">
@@ -5887,7 +5899,7 @@ function renderVolumeReferenceGallery(cards, options = {}) {
     ].map((group) => ({ ...group, items: validCards.filter((item) => item.group === group.key) })).filter((group) => group.items.length);
     els.volumeImageryGrid.innerHTML = groups.map((group) => `
       <section class="volume-reference-group"><div class="volume-reference-group__head"><div><p class="eyebrow">${escapeHtml(group.title)}</p><h3>${escapeHtml(group.title)}</h3><p class="muted">${escapeHtml(group.copy)}</p></div>
-      <button class="chip volume-reference-group__compare" type="button" data-volume-compare-eyebrow="${escapeAttr(group.title)}" data-volume-compare-title="${escapeAttr(`${group.title} - ${currentArea()?.label || "Area"}`)}" data-volume-compare-caption="${escapeAttr(`Choose any two to four of the ${group.items.length} ${group.title.toLowerCase()} thumbnail maps for side-by-side review.`)}" data-volume-compare-items="${escapeAttr(JSON.stringify(group.items.map((item) => ({ src: item.src, title: item.title || "Reference image", alt: item.alt || item.title || "Reference image", label: item.label || item.badge || item.title || "Reference image" }))))}">Select 2–4 Maps to Compare</button></div>
+      <button class="chip volume-reference-group__compare" type="button" data-volume-compare-eyebrow="${escapeAttr(group.title)}" data-volume-compare-title="${escapeAttr(`${group.title} - ${currentArea()?.label || "Area"}`)}" data-volume-compare-caption="${escapeAttr(`Choose any two to four of the ${group.items.length} ${group.title.toLowerCase()} thumbnail maps for side-by-side review.`)}" data-volume-compare-items="${escapeAttr(JSON.stringify(group.items.map((item) => ({ src: item.src, thumbnailSrc: item.thumbnailSrc || item.src, title: item.title || "Reference image", alt: item.alt || item.title || "Reference image", label: item.label || item.badge || item.title || "Reference image" }))))}">Select 2–4 Maps to Compare</button></div>
       <div class="volume-reference-group__grid">${group.items.map(renderCard).join("")}</div></section>
     `).join("");
     return;
@@ -5900,7 +5912,7 @@ function parseVolumeCompareItems(rawValue) {
   try {
     const parsed = JSON.parse(rawValue);
     return Array.isArray(parsed) ? parsed.filter((item) => item && typeof item === "object" && item.src).map((item) => ({
-      src: String(item.src), title: String(item.title || "Reference image"), alt: String(item.alt || item.title || "Reference image"), label: String(item.label || item.title || "Reference image")
+      src: String(item.src), thumbnailSrc: String(item.thumbnailSrc || item.src), title: String(item.title || "Reference image"), alt: String(item.alt || item.title || "Reference image"), label: String(item.label || item.title || "Reference image")
     })) : [];
   } catch { return []; }
 }
@@ -5908,11 +5920,23 @@ function parseVolumeCompareItems(rawValue) {
 function renderVolumeComparePicker() {
   if (!els.volumeComparePickerGrid || !els.volumeComparePickerStatus || !els.volumeComparePickerOpen) return;
   const selected = new Set(state.volumeComparePickerSelected);
-  els.volumeComparePickerGrid.innerHTML = state.volumeComparePickerItems.map((item, index) => {
+  const signature = JSON.stringify(state.volumeComparePickerItems.map((item) => [item.src, item.thumbnailSrc, item.title, item.alt, item.label]));
+  if (signature !== state.volumeComparePickerSignature) {
+    els.volumeComparePickerGrid.innerHTML = state.volumeComparePickerItems.map((item, index) => {
+      const isSelected = selected.has(index);
+      const selectionOrder = state.volumeComparePickerSelected.indexOf(index) + 1;
+      return `<button class="volume-compare-picker__card ${isSelected ? "is-selected" : ""}" type="button" data-volume-compare-index="${index}" aria-pressed="${isSelected ? "true" : "false"}"><div class="volume-compare-picker__thumb"><img loading="lazy" decoding="async" fetchpriority="low" width="500" height="397" src="${escapeAttr(item.thumbnailSrc || item.src)}" alt="${escapeAttr(item.alt)}"></div><div class="volume-compare-picker__meta"><div class="volume-compare-picker__meta-head"><strong>${escapeHtml(item.label)}</strong><span class="volume-compare-picker__selection">${isSelected ? `Selected ${selectionOrder}` : "Select"}</span></div><span>${escapeHtml(item.title)}</span></div></button>`;
+    }).join("");
+    state.volumeComparePickerSignature = signature;
+  }
+  els.volumeComparePickerGrid.querySelectorAll("[data-volume-compare-index]").forEach((card) => {
+    const index = Number(card.dataset.volumeCompareIndex);
     const isSelected = selected.has(index);
-    const selectionOrder = state.volumeComparePickerSelected.indexOf(index) + 1;
-    return `<button class="volume-compare-picker__card ${isSelected ? "is-selected" : ""}" type="button" data-volume-compare-index="${index}" aria-pressed="${isSelected ? "true" : "false"}"><div class="volume-compare-picker__thumb"><img loading="lazy" decoding="async" src="${escapeAttr(item.src)}" alt="${escapeAttr(item.alt)}"></div><div class="volume-compare-picker__meta"><div class="volume-compare-picker__meta-head"><strong>${escapeHtml(item.label)}</strong><span class="volume-compare-picker__selection">${isSelected ? `Selected ${selectionOrder}` : "Select"}</span></div><span>${escapeHtml(item.title)}</span></div></button>`;
-  }).join("");
+    card.classList.toggle("is-selected", isSelected);
+    card.setAttribute("aria-pressed", isSelected ? "true" : "false");
+    const selection = card.querySelector(".volume-compare-picker__selection");
+    if (selection) selection.textContent = isSelected ? `Selected ${state.volumeComparePickerSelected.indexOf(index) + 1}` : "Select";
+  });
   const count = state.volumeComparePickerSelected.length;
   els.volumeComparePickerStatus.textContent = count < 2 ? "Choose two to four thumbnail maps to compare." : count === 4 ? "Four maps selected. Compare is ready." : `${count} maps selected. You can add up to ${4 - count} more.`;
   els.volumeComparePickerOpen.disabled = count < 2;
@@ -5937,6 +5961,7 @@ function closeVolumeComparePicker() {
   els.volumeComparePicker.setAttribute("aria-hidden", "true");
   state.volumeComparePickerItems = [];
   state.volumeComparePickerSelected = [];
+  state.volumeComparePickerSignature = "";
   els.volumeComparePickerGrid.innerHTML = "";
   if (els.volumeImageLightbox?.classList.contains("hidden")) document.body.classList.remove("volume-lightbox-open");
 }
@@ -6095,6 +6120,17 @@ function surveyAssetPath(projectId, surveyId, areaId, fileName) {
 
 function sharedAreaAssetPath(projectId, areaId, fileName) {
   return `./${assetSettings.sharedRoot}/${projectId}/${areaId}/${fileName}`;
+}
+
+// Reference-map thumbnails are deterministic public-safe derivatives of the
+// authenticated source maps. Gallery and picker views use these lightweight
+// WebP files; the original PNG remains the only source loaded in the lightbox.
+function referenceMapThumbnailPath(src) {
+  const source = String(src || "");
+  if (!source.startsWith("./survey-data/") || !/\.png$/i.test(source)) return source;
+  return source
+    .replace("./survey-data/", "./assets/reference-map-thumbnails/survey-data/")
+    .replace(/\.png$/i, ".webp");
 }
 
   function assetFileNameVariants(areaId, fileName) {

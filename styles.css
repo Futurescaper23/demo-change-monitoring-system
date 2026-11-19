@@ -3182,7 +3182,7 @@ textarea {
 .volume-reference-group__grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
 .volume-reference-group__compare { white-space: nowrap; align-self: flex-start; min-height: 42px; padding: 0 16px; border-color: rgba(86, 210, 255, .68); background: linear-gradient(135deg, #3cc5f3, #3276d9); box-shadow: 0 10px 22px rgba(23, 132, 220, .28); color: #071b39; font-weight: 800; }
 .volume-imagery-grid--grouped .volume-reference-card { padding: 8px; border-radius: 14px; gap: 7px; }
-.volume-imagery-grid--grouped .volume-reference-stage { min-height: 98px; border-radius: 10px; background: linear-gradient(180deg, #eef2f7 0%, #dbe3ee 100%); }
+.volume-imagery-grid--grouped .volume-reference-stage { min-height: 0; aspect-ratio: 8031 / 6377; border-radius: 10px; background: linear-gradient(180deg, #eef2f7 0%, #dbe3ee 100%); }
 .volume-imagery-grid--grouped .volume-reference-card__meta { min-height: 36px; display: block; }
 .volume-imagery-grid--grouped .volume-reference-card__copy { display: block; }
 .volume-imagery-grid--grouped .volume-reference-card__copy strong { display: block; overflow: hidden; color: #f1f7ff; font-size: .78rem; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
@@ -3221,6 +3221,7 @@ textarea {
   background: linear-gradient(180deg, rgba(58, 84, 126, 0.28), rgba(27, 43, 70, 0.46));
   display: grid;
   gap: 12px;
+  contain: layout paint style;
 }
 
 .volume-reference-card__button {
@@ -3252,6 +3253,7 @@ textarea {
   height: 100%;
   object-fit: contain;
   display: block;
+  aspect-ratio: 8031 / 6377;
 }
 
 .volume-reference-card__meta {
