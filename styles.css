@@ -5055,6 +5055,7 @@ a { color: var(--accent); }
     --hero-rail-column: calc(var(--hero-nav-width) + (var(--hero-rail-inset) * 2));
     --hero-rail-gap: clamp(18px, 2.2dvw, 34px);
     --hero-copy-left: calc(var(--hero-rail-column) + var(--hero-rail-gap));
+    --hero-brand-left: clamp(40px, 4.1vw, 56px);
     --hero-nav-height: min(504px, calc(var(--hero-height) * 0.64));
     display: grid;
     grid-template-columns: var(--hero-rail-column) minmax(0, 1fr);
@@ -5114,6 +5115,12 @@ a { color: var(--accent); }
   .shell[data-stage-visual="area-hero"] .shell-stagebar__copy {
     left: var(--hero-copy-left);
     max-width: min(420px, calc(100% - var(--hero-copy-left) - 320px));
+  }
+
+  /* Keep the FutureScaping mark in its original top-left space while copy uses the content column. */
+  .shell[data-stage-visual="overview-hero"] .shell-stagebar__brand,
+  .shell[data-stage-visual="area-hero"] .shell-stagebar__brand {
+    transform: translateX(calc(var(--hero-brand-left) - var(--hero-copy-left)));
   }
 
   .shell[data-stage-visual="overview-hero"] .shell-toolbar,

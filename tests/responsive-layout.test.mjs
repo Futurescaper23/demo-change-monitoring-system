@@ -41,6 +41,8 @@ assert.match(styles, /--hero-height: calc\(100dvh - 36px\)/);
 assert.match(styles, /height: var\(--hero-height\)/);
 assert.match(styles, /grid-template-columns: var\(--hero-rail-column\) minmax\(0, 1fr\)/);
 assert.match(styles, /--hero-nav-height: min\(504px, calc\(var\(--hero-height\) \* 0\.64\)\)/);
+assert.match(styles, /--hero-brand-left: clamp\(40px, 4\.1vw, 56px\)/);
+assert.match(styles, /transform: translateX\(calc\(var\(--hero-brand-left\) - var\(--hero-copy-left\)\)\)/);
 assert.match(styles, /grid-template-rows: repeat\(7, minmax\(0, 1fr\)\)/);
 assert.match(styles, /width: calc\(100% - var\(--hero-rail-column\)\)/);
 assert.match(styles, /object-fit: contain/);
