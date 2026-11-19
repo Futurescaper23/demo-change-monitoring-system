@@ -4174,13 +4174,14 @@ async function renderPendingVolumeVerification(project, survey, area, isCurrent 
     );
 
     // The self-mounting operational animation module observes this visible
-    // panel and adds the A→E review timeline above this preserved context.
+    // panel and adds the experimental A→F visual review timeline above this
+    // preserved historical context. It does not publish Scan F volumetrics.
     els.volumeTrendPanel.classList.remove("is-hidden");
     els.volumeTrendBody.innerHTML = `
       <div class="volume-trend-callout">
         <p class="eyebrow">Historical review context</p>
-        <h3>Area 8 sediment change through Survey Round 5</h3>
-        <p>The timeline above contains the experimental A→B through D→E display frames. Survey Round 6 is not included and no E→F figures or zone results are shown.</p>
+        <h3>Area 8 experimental sediment-change review through Survey Round 6</h3>
+        <p>The timeline above contains experimental A→B through E→F display frames. The E→F visual is matched-cell evidence only; its registration, water, datum and candidate boundaries remain unverified. No Scan F volumetric figures are published.</p>
       </div>
     `;
   } else {
