@@ -1066,6 +1066,7 @@ function bindEvents() {
     const tab = event.target.closest(".tab");
     if (!tab) return;
     activateTab(tab.dataset.tab);
+    scrollToActiveTabPanel(tab.dataset.tab);
     updateBackToTopVisibility();
   });
 
@@ -7477,6 +7478,29 @@ function activateTab(tabName, options = {}) {
   if (options.render !== false) {
     renderActiveTab();
   }
+}
+
+function scrollToActiveTabPanel(tabName) {
+  if (!tabName || state.activeTab !== tabName) {
+    return;
+  }
+
+  window.requestAnimationFrame(() => {
+    if (state.activeTab !== tabName) {
+      return;
+    }
+
+    const panel = Array.from(document.querySelectorAll(".tab-panel")).find((item) => item.dataset.panel === tabName);
+    if (!panel) {
+      return;
+    }
+
+    const tabsAreSticky = window.getComputedStyle(els.tabs).position === "sticky";
+    const tabsHeight = tabsAreSticky ? Math.ceil(els.tabs.getBoundingClientRect().height) : 0;
+    const targetTop = Math.max(0, window.scrollY + panel.getBoundingClientRect().top - tabsHeight - 16);
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    window.scrollTo({ top: targetTop, behavior });
+  });
 }
 
 function suspendInactiveEmbeds(nextTab) {
