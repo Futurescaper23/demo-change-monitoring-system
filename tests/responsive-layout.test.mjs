@@ -61,6 +61,8 @@ assert.match(embeddedViewerStyles, /body\.is-embedded\.is-controls-open \.mobile
 assert.match(embeddedViewerStyles, /body\.is-embedded \.panel,[\s\S]*body\.is-embedded \.dock \{[\s\S]*position: static/);
 assert.match(embeddedViewerStyles, /body\.is-embedded \.viewport-wrap #viewer \{[\s\S]*height: 100% !important/);
 assert.match(embeddedViewerMarkup, /id="mobile-controls-toggle"[\s\S]*aria-controls="mobile-controls-drawer"/);
+assert.match(embeddedViewerMarkup, /id="mobile-controls-toggle"[\s\S]*aria-label="Controls"[\s\S]*title="Controls"/);
+assert.match(embeddedViewerMarkup, /class="mobile-controls-toggle__icon"/);
 assert.match(embeddedViewerMarkup, /id="mobile-controls-drawer"/);
 assert.match(embeddedViewerMarkup, /id="mobile-controls-edge-swipe"/);
 assert.match(embeddedViewerScript, /mobileControlsDrawerEl\.inert = isMobileEmbed && !open/);
@@ -69,5 +71,6 @@ assert.match(embeddedViewerScript, /\(open \? mobileControlsCloseEl : mobileCont
 assert.match(embeddedViewerScript, /mobileControlsEdgeSwipeEl\?\.addEventListener\('pointerdown'/);
 assert.doesNotMatch(embeddedViewerScript, /canvas\.addEventListener\('pointerdown'[\s\S]*mobileEdgeSwipeStartX/);
 assert.match(embeddedViewerScript, /setMobileControlsOpen\(false\)/);
+assert.match(embeddedViewerStyles, /mobile-controls-toggle \{[\s\S]*top: max\(12px, env\(safe-area-inset-top\)\)[\s\S]*right: max\(12px, env\(safe-area-inset-right\)\)[\s\S]*width: 46px/);
 
 console.log("responsive layout checks passed");

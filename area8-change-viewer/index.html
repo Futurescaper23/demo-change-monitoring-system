@@ -16,9 +16,15 @@
         type="button"
         aria-controls="mobile-controls-drawer"
         aria-expanded="false"
+        aria-label="Controls"
+        title="Controls"
       >
-        <span aria-hidden="true">☰</span>
-        Controls
+        <svg class="mobile-controls-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 7h16M4 17h16M8 3v8M16 13v8" />
+          <circle cx="8" cy="7" r="2" />
+          <circle cx="16" cy="17" r="2" />
+        </svg>
+        <span class="mobile-controls-toggle__label">Controls</span>
       </button>
       <button id="mobile-controls-scrim" class="mobile-controls-scrim" type="button" aria-label="Close viewer controls"></button>
       <div id="mobile-controls-edge-swipe" class="mobile-controls-edge-swipe" aria-hidden="true"></div>
