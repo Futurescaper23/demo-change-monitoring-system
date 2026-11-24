@@ -47,4 +47,27 @@ assert.match(styles, /grid-template-rows: repeat\(7, minmax\(0, 1fr\)\)/);
 assert.match(styles, /width: calc\(100% - var\(--hero-rail-column\)\)/);
 assert.match(styles, /object-fit: contain/);
 
+assert.match(styles, /@media \(min-width: 721px\) and \(max-width: 1440px\)[\s\S]*\.volume-reference-group__grid,[\s\S]*\.volume-compare-picker__grid[\s\S]*repeat\(4, minmax\(0, 1fr\)\)/);
+assert.match(styles, /@media \(min-width: 721px\) and \(max-width: 1160px\)[\s\S]*\.volume-viewer-guide__grid[\s\S]*repeat\(2, minmax\(0, 1fr\)\)/);
+assert.match(styles, /@media \(max-width: 720px\)[\s\S]*#volumeMetricGrid[\s\S]*grid-template-columns: minmax\(0, 1fr\)/);
+assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.volume-viewer-stage,[\s\S]*\.volume-viewer-frame[\s\S]*height: clamp\(480px, 72dvh, 680px\)/);
+assert.match(styles, /@media \(max-width: 720px\)[\s\S]*\.stats-grid,[\s\S]*\.card-grid[\s\S]*grid-template-columns: minmax\(0, 1fr\)/);
+
+const embeddedViewerStyles = fs.readFileSync(new URL("../area8-change-viewer/src/viewer/style.css", import.meta.url), "utf8");
+const embeddedViewerMarkup = fs.readFileSync(new URL("../area8-change-viewer/index.html", import.meta.url), "utf8");
+const embeddedViewerScript = fs.readFileSync(new URL("../area8-change-viewer/src/viewer/main.js", import.meta.url), "utf8");
+assert.match(embeddedViewerStyles, /@media \(max-width: 640px\)[\s\S]*\.mobile-controls-drawer[\s\S]*transform: translateX\(calc\(100% \+ 2px\)\)/);
+assert.match(embeddedViewerStyles, /body\.is-embedded\.is-controls-open \.mobile-controls-drawer \{[\s\S]*transform: translateX\(0\)/);
+assert.match(embeddedViewerStyles, /body\.is-embedded \.panel,[\s\S]*body\.is-embedded \.dock \{[\s\S]*position: static/);
+assert.match(embeddedViewerStyles, /body\.is-embedded \.viewport-wrap #viewer \{[\s\S]*height: 100% !important/);
+assert.match(embeddedViewerMarkup, /id="mobile-controls-toggle"[\s\S]*aria-controls="mobile-controls-drawer"/);
+assert.match(embeddedViewerMarkup, /id="mobile-controls-drawer"/);
+assert.match(embeddedViewerMarkup, /id="mobile-controls-edge-swipe"/);
+assert.match(embeddedViewerScript, /mobileControlsDrawerEl\.inert = isMobileEmbed && !open/);
+assert.match(embeddedViewerScript, /mobileControlsToggleEl\.inert = open/);
+assert.match(embeddedViewerScript, /\(open \? mobileControlsCloseEl : mobileControlsToggleEl\)\?\.focus/);
+assert.match(embeddedViewerScript, /mobileControlsEdgeSwipeEl\?\.addEventListener\('pointerdown'/);
+assert.doesNotMatch(embeddedViewerScript, /canvas\.addEventListener\('pointerdown'[\s\S]*mobileEdgeSwipeStartX/);
+assert.match(embeddedViewerScript, /setMobileControlsOpen\(false\)/);
+
 console.log("responsive layout checks passed");

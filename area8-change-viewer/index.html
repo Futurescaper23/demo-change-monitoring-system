@@ -10,6 +10,19 @@
     <div id="app" class="fs-stage">
       <div class="fs-stage__glow" aria-hidden="true"></div>
 
+      <button
+        id="mobile-controls-toggle"
+        class="mobile-controls-toggle"
+        type="button"
+        aria-controls="mobile-controls-drawer"
+        aria-expanded="false"
+      >
+        <span aria-hidden="true">☰</span>
+        Controls
+      </button>
+      <button id="mobile-controls-scrim" class="mobile-controls-scrim" type="button" aria-label="Close viewer controls"></button>
+      <div id="mobile-controls-edge-swipe" class="mobile-controls-edge-swipe" aria-hidden="true"></div>
+
       <header class="brand-block">
         <div class="brand-mark" aria-hidden="true">
           <span></span>
@@ -39,85 +52,93 @@
         </div>
       </aside>
 
-      <aside class="panel">
-        <div class="panel__section">
-          <p class="panel__title">Layers</p>
-          <div class="controls">
-            <label id="area-select-row">
-              <span>Area</span>
-              <select id="area-select"></select>
-            </label>
+      <section id="mobile-controls-drawer" class="mobile-controls-drawer" aria-label="Viewer controls">
+        <div class="mobile-controls-drawer__head">
+          <p>Viewer controls</p>
+          <button id="mobile-controls-close" type="button" aria-label="Close viewer controls">Close</button>
+        </div>
+        <div id="mobile-controls-handle" class="mobile-controls-drawer__handle" aria-hidden="true"><span></span></div>
 
-            <label>
-              <span>Comparison</span>
-              <select id="comparison-select"></select>
-            </label>
+        <aside class="panel">
+          <div class="panel__section">
+            <p class="panel__title">Layers</p>
+            <div class="controls">
+              <label id="area-select-row">
+                <span>Area</span>
+                <select id="area-select"></select>
+              </label>
 
-            <section class="comparison-shelf" aria-labelledby="comparison-shelf-title">
-              <p id="comparison-shelf-title" class="comparison-shelf__title">Available comparisons</p>
-              <p class="comparison-shelf__hint">Choose an available comparison. These visualisations are preliminary and are not independent scientific approval.</p>
-              <div id="pair-picker" class="pair-picker" role="list" aria-live="polite"></div>
-            </section>
+              <label>
+                <span>Comparison</span>
+                <select id="comparison-select"></select>
+              </label>
 
-            <label class="toggle">
-              <input id="toggle-site-map" type="checkbox" checked />
-              <span>Show site map underlay</span>
-            </label>
-            <label class="toggle">
-              <input id="toggle-grid" type="checkbox" />
-              <span>Show grid</span>
-            </label>
-            <label class="toggle">
-              <input id="toggle-overlay" type="checkbox" checked />
-              <span>Show gain/loss overlay</span>
-            </label>
+              <section class="comparison-shelf" aria-labelledby="comparison-shelf-title">
+                <p id="comparison-shelf-title" class="comparison-shelf__title">Available comparisons</p>
+                <p class="comparison-shelf__hint">Choose an available comparison. These visualisations are preliminary and are not independent scientific approval.</p>
+                <div id="pair-picker" class="pair-picker" role="list" aria-live="polite"></div>
+              </section>
+
+              <label class="toggle">
+                <input id="toggle-site-map" type="checkbox" checked />
+                <span>Show site map underlay</span>
+              </label>
+              <label class="toggle">
+                <input id="toggle-grid" type="checkbox" />
+                <span>Show grid</span>
+              </label>
+              <label class="toggle">
+                <input id="toggle-overlay" type="checkbox" checked />
+                <span>Show gain/loss overlay</span>
+              </label>
+            </div>
           </div>
-        </div>
 
-        <div class="panel__section">
-          <p class="panel__title">Display</p>
-          <div class="controls">
-            <label>
-              <span>Overlay mode</span>
-              <select id="overlay-mode">
-                <option value="true_z" selected>True terrain change</option>
-                <option value="draped">Draped on base</option>
-              </select>
-            </label>
+          <div class="panel__section">
+            <p class="panel__title">Display</p>
+            <div class="controls">
+              <label>
+                <span>Overlay mode</span>
+                <select id="overlay-mode">
+                  <option value="true_z" selected>True terrain change</option>
+                  <option value="draped">Draped on base</option>
+                </select>
+              </label>
 
-            <label>
-              <span>Point size</span>
-              <input id="point-size" type="range" min="0.5" max="8" step="0.1" value="1.6" />
-            </label>
+              <label>
+                <span>Point size</span>
+                <input id="point-size" type="range" min="0.5" max="8" step="0.1" value="1.6" />
+              </label>
 
-            <label>
-              <span>Opacity</span>
-              <input id="opacity" type="range" min="0.1" max="1" step="0.05" value="0.9" />
-            </label>
+              <label>
+                <span>Opacity</span>
+                <input id="opacity" type="range" min="0.1" max="1" step="0.05" value="0.9" />
+              </label>
+            </div>
           </div>
-        </div>
 
-        <div class="actions">
-          <button id="reset-camera" type="button">Reset camera</button>
-          <button id="overview-camera" type="button">Site overview</button>
-          <button id="fullscreen" type="button">Fullscreen</button>
-        </div>
-      </aside>
+          <div class="actions">
+            <button id="reset-camera" type="button">Reset camera</button>
+            <button id="overview-camera" type="button">Site overview</button>
+            <button id="fullscreen" type="button">Fullscreen</button>
+          </div>
+        </aside>
 
-      <aside class="dock">
-        <div class="legend">
-          <h2>Legend</h2>
-          <p><span class="swatch gain"></span> Blue = gain / deposition</p>
-          <p><span class="swatch loss"></span> Red = loss / erosion</p>
-        </div>
+        <aside class="dock">
+          <div class="legend">
+            <h2>Legend</h2>
+            <p><span class="swatch gain"></span> Blue = gain / deposition</p>
+            <p><span class="swatch loss"></span> Red = loss / erosion</p>
+          </div>
 
-        <div class="legend">
-          <h2>Height Probe</h2>
-          <p id="probe-readout">Click the terrain or change points to inspect height.</p>
-        </div>
+          <div class="legend">
+            <h2>Height Probe</h2>
+            <p id="probe-readout">Click the terrain or change points to inspect height.</p>
+          </div>
 
-        <div id="status" class="status">Loading processed point clouds...</div>
-      </aside>
+          <div id="status" class="status">Loading processed point clouds...</div>
+        </aside>
+      </section>
 
       <main class="viewport-wrap">
         <canvas id="viewer"></canvas>

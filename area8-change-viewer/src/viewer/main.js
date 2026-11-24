@@ -29,6 +29,12 @@ const probeReadoutEl = document.querySelector('#probe-readout');
 const resetCameraEl = document.querySelector('#reset-camera');
 const overviewCameraEl = document.querySelector('#overview-camera');
 const fullscreenEl = document.querySelector('#fullscreen');
+const mobileControlsToggleEl = document.querySelector('#mobile-controls-toggle');
+const mobileControlsCloseEl = document.querySelector('#mobile-controls-close');
+const mobileControlsScrimEl = document.querySelector('#mobile-controls-scrim');
+const mobileControlsHandleEl = document.querySelector('#mobile-controls-handle');
+const mobileControlsDrawerEl = document.querySelector('#mobile-controls-drawer');
+const mobileControlsEdgeSwipeEl = document.querySelector('#mobile-controls-edge-swipe');
 // The demo owns this interface but streams the approved scene package read-only.
 const assetUrl = (path) => new URL(path, 'https://area8.vercel.app/').toString();
 const embeddedMode =
@@ -38,6 +44,61 @@ const embeddedMode =
 if (embeddedMode) {
   pageBody.classList.add('is-embedded');
 }
+
+const mobileControlsQuery = window.matchMedia('(max-width: 640px)');
+let mobileDrawerStartX = null;
+let mobileEdgeSwipeStartX = null;
+
+function setMobileControlsOpen(isOpen, { moveFocus = false } = {}) {
+  const isMobileEmbed = embeddedMode && mobileControlsQuery.matches;
+  const open = Boolean(isOpen && isMobileEmbed);
+  pageBody.classList.toggle('is-controls-open', open);
+  mobileControlsToggleEl?.setAttribute('aria-expanded', String(open));
+  mobileControlsDrawerEl?.setAttribute('aria-hidden', String(isMobileEmbed && !open));
+  if (mobileControlsToggleEl && 'inert' in mobileControlsToggleEl) {
+    mobileControlsToggleEl.inert = open;
+  }
+  if (mobileControlsDrawerEl && 'inert' in mobileControlsDrawerEl) {
+    mobileControlsDrawerEl.inert = isMobileEmbed && !open;
+  }
+  if (moveFocus) {
+    (open ? mobileControlsCloseEl : mobileControlsToggleEl)?.focus({ preventScroll: true });
+  }
+}
+
+mobileControlsToggleEl?.addEventListener('click', () => {
+  setMobileControlsOpen(!pageBody.classList.contains('is-controls-open'), { moveFocus: true });
+});
+mobileControlsCloseEl?.addEventListener('click', () => setMobileControlsOpen(false, { moveFocus: true }));
+mobileControlsScrimEl?.addEventListener('click', () => setMobileControlsOpen(false, { moveFocus: true }));
+
+mobileControlsHandleEl?.addEventListener('pointerdown', (event) => {
+  mobileDrawerStartX = event.clientX;
+  mobileControlsHandleEl.setPointerCapture?.(event.pointerId);
+});
+mobileControlsHandleEl?.addEventListener('pointerup', (event) => {
+  if (mobileDrawerStartX != null && event.clientX - mobileDrawerStartX < -42) {
+    setMobileControlsOpen(false, { moveFocus: true });
+  }
+  mobileDrawerStartX = null;
+});
+mobileControlsEdgeSwipeEl?.addEventListener('pointerdown', (event) => {
+  mobileEdgeSwipeStartX = event.clientX;
+  mobileControlsEdgeSwipeEl.setPointerCapture?.(event.pointerId);
+});
+mobileControlsEdgeSwipeEl?.addEventListener('pointerup', (event) => {
+  if (mobileEdgeSwipeStartX != null && mobileEdgeSwipeStartX - event.clientX > 28) {
+    setMobileControlsOpen(true, { moveFocus: true });
+  }
+  mobileEdgeSwipeStartX = null;
+});
+const resetMobileControlsForViewport = () => setMobileControlsOpen(false);
+if (mobileControlsQuery.addEventListener) {
+  mobileControlsQuery.addEventListener('change', resetMobileControlsForViewport);
+} else {
+  mobileControlsQuery.addListener(resetMobileControlsForViewport);
+}
+setMobileControlsOpen(false);
 
 window.__viewerBooted = true;
 statusEl.textContent = 'Booting viewer...';
@@ -602,10 +663,14 @@ overviewCameraEl.addEventListener('click', () => {
 });
 
 fullscreenEl.addEventListener('click', async () => {
-  if (!document.fullscreenElement) {
-    await document.documentElement.requestFullscreen();
-  } else {
-    await document.exitFullscreen();
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
+    }
+  } catch {
+    statusEl.textContent = 'Fullscreen is not available in this browser. You can still rotate and zoom the model here.';
   }
 });
 

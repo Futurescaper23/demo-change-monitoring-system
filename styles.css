@@ -5171,3 +5171,58 @@ a { color: var(--accent); }
 body.volume-lightbox-open {
   overflow: hidden;
 }
+
+/* Volume Change uses a denser map catalogue and an embedded terrain viewer.
+   Reflow those controls before the general mobile breakpoint so laptop-sized
+   content stays readable instead of shrinking into six narrow columns. */
+@media (min-width: 721px) and (max-width: 1440px) {
+  .volume-reference-group__grid,
+  .volume-compare-picker__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .volume-viewer-stage,
+  .volume-viewer-frame {
+    min-height: clamp(760px, 88vh, 840px);
+  }
+}
+
+@media (min-width: 721px) and (max-width: 1160px) {
+  .volume-reference-group__grid,
+  .volume-compare-picker__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .volume-viewer-guide__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  /* Keep the high-level evidence cards readable; the previous auto-fit rule
+     admitted two cards at 175px on a 390px screen. */
+  #volumeMetricGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The embedded viewer reflows its controls vertically at this width. Give
+     it natural page height rather than clipping a second scrolling document. */
+  .volume-viewer-stage,
+  .volume-viewer-frame {
+    height: clamp(480px, 72dvh, 680px);
+    min-height: clamp(480px, 72dvh, 680px);
+  }
+
+  /* Keep the wider demo touch-friendly without carrying the desktop's dense
+     multi-card layout into a handset viewport. */
+  .stats-grid,
+  .card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  button,
+  .chip,
+  .area-action {
+    min-height: 44px;
+  }
+}
